@@ -42,7 +42,7 @@ MODULE_DOC_TEMPLATE = """{title}
 Module Functions
 ****************
 
-.. gnomad_automodulesummary:: {module_name}
+.. automodulesummary:: {module_name}
 
 .. automodule:: {module_name}
     :exclude-members: get_script_argument_parser
