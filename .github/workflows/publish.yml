@@ -1,0 +1,75 @@
+# This workflow publishes the package to PyPI when a version tag is pushed to GitHub.
+name: Publish to PyPI
+on:
+  push:
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+
+jobs:
+  publish-release:
+    name: Publish release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Validate version
+        run: |
+          package_version=$(grep 'version' setup.py | sed -E 's|.*([0-9]+\.[0-9]+\.[0-9]+).*|\1|')
+          tag_version=$(echo "$GITHUB_REF" | sed -E 's|.*([0-9]+\.[0-9]+\.[0-9]+).*|\1|')
+          if [ "$package_version" != "$tag_version" ]; then
+            echo "Tag version (${tag_version}) does not match package version (${package_version})"
+            exit 1
+          fi
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Use pip cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            pip-
+      - name: Install dependencies
+        run: |
+          pip install --upgrade setuptools
+          pip install wheel
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: Run Pylint
+        run: ./lint
+      - name: Run tests
+        run: python -m pytest
+      - name: Create distributions
+        run: python setup.py sdist bdist_wheel
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Create GitHub Release
+        uses: actions/github-script@v5
+        with:
+          script: |
+            // Get repository and tag from workflow context
+            // https://docs.github.com/en/actions/learn-github-actions/contexts
+            const repo = "${{ github.event.repository.name }}"
+            const owner = "${{ github.event.repository.owner.name }}"
+            const tag = "${{ github.ref }}".replace(/^refs\/tags\//, "")
+
+            // Create a GitHub Release for the tag if one doesn't already exist
+            try {
+              await github.rest.repos.getReleaseByTag({ owner, repo, tag })
+              console.log("Release already exists")
+            } catch (error) {
+              if (error.status === 404) {
+                console.log("Creating release")
+                await github.rest.repos.createRelease({
+                  owner, repo,
+                  tag_name: tag,
+                  generate_release_notes: true
+                })
+              } else {
+                throw error
+              }
+            }
