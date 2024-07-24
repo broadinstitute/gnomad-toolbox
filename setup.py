@@ -32,7 +32,7 @@ setuptools.setup(
     classifiers=[
         "Topic :: Scientific/Engineering :: Bio-Informatics",
         "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: BSD 3-Clause License",
         "Programming Language :: Python :: 3",
         "Development Status :: 4 - Beta",
     ],

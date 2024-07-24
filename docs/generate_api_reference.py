@@ -19,9 +19,17 @@ ROOT_PACKAGE_PATH = os.path.join(REPOSITORY_ROOT_PATH, "gnomad_toolbox")
 
 DOCS_DIRECTORY = os.path.join(REPOSITORY_ROOT_PATH, "docs")
 
-EXCLUDE_PACKAGES = []
+EXCLUDE_PACKAGES = ["tests"]
 
 EXCLUDE_TOP_LEVEL_PACKAGES = []
+"""
+List of packages/modules to exclude from API reference documentation.
+
+This should be a list of strings where each string is the full name (from the top level)
+of a package or module to exclude. For example, if 'gnomad_toolbox' includes a
+'example_notebooks' that you want to exclude, you would add
+'gnomad_toolbox.example_notebooks' to this list.
+"""
 
 PACKAGE_DOC_TEMPLATE = """{title}
 

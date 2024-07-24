@@ -1,5 +1,6 @@
 gnomad_toolbox
 ===============
+This package contains a number of `Hail <https://hail.is>`_ utility functions to help users more easily parse public `gnomAD <https://gnomad.broadinstitute.org>`_ data.
 
 Contents
 ========

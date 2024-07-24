@@ -1,8 +1,10 @@
 [MESSAGES CONTROL]
 
 disable=
-  unused-wildcard-import,
+  # Disable because ~ is used in a lot of hail code where it is not an error
   invalid-unary-operand-type,
+  # Ignore unnecessary-lambda because it has many false positives from hl.ArrayExpression.map, etc.
+  unnecessary-lambda,
   # Ignore refactor and convention categories
   R,
   C
