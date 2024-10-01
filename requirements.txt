@@ -1,3 +1,3 @@
 # We're using the main branch of gnomad_method on github rather than the pip version
-gnomad_methods@git+https://github.com/broadinstitute/gnomad_methods@main
+git+https://github.com/broadinstitute/gnomad_methods@main
 hail
