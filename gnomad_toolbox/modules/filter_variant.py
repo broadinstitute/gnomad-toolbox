@@ -45,3 +45,86 @@ def get_variant_count(
 
     # Count variants with frequency <1%, <0.1%, and singletons (AC == 1).
     return counts
+
+
+def filter_by_csqs(ht: hl.Table, csqs: list[str]) -> hl.Table:
+    """
+    Filter variants by consequence.
+
+    :param ht: Input Table.
+    :param csqs: List of consequences.
+    :return: Table with variants with the given consequences.
+    """
+    ht = ht.filter(
+        hl.any(
+            hl.map(
+                lambda x: (x.consequence_terms.contains(csqs)),
+                ht.vep.transcript_consequences,
+            )
+        )
+    )
+
+    return ht
+
+
+def filter_by_gene_symbol(ht: hl.Table, gene: str) -> hl.Table:
+    """
+    Filter variants in a gene.
+
+    :param ht: Input Table.
+    :param gene: Gene symbol or.
+    :return: Table with variants in the gene.
+    """
+    ht = filter_vep_transcript_csqs(
+        ht,
+        synonymous=False,
+        mane_select=True,
+        genes=[gene],
+        match_by_gene_symbol=True,
+    )
+
+    return ht
+
+
+def filter_to_coding_variants(ht: hl.Table) -> hl.Table:
+    """
+    Filter to coding variants.
+
+    :param ht: Input Table.
+    :return: Table with coding variants.
+    """
+    ht = filter_vep_transcript_csqs(
+        ht,
+        synonymous=False,
+        canonical=True,
+    )
+    ht = get_most_severe_consequence_for_summary(ht)
+
+    filter_expr = {}
+    filter_expr["coding"] = hl.any(lambda csq: ht.most_severe_csq == csq, CSQ_CODING)
+
+    ht = ht.filter(filter_expr["coding"])
+
+    return ht
+
+
+def filter_to_lof_variants(ht: hl.Table) -> hl.Table:
+    """
+    Filter to loss-of-function (LoF) variants.
+
+    :param ht: Input Table.
+    :return: Table with LoF variants.
+    """
+    ht = filter_vep_transcript_csqs(
+        ht,
+        lof=True,
+        canonical=True,
+    )
+    ht = get_most_severe_consequence_for_summary(ht)
+
+    filter_expr = {}
+    filter_expr["lof"] = hl.any(lambda csq: ht.most_severe_csq == csq, CSQ_CODING)
+
+    ht = ht.filter(filter_expr["lof"])
+
+    return ht

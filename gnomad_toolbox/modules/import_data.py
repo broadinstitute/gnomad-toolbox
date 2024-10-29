@@ -20,11 +20,13 @@ def get_ht_by_datatype_and_version(
 
        Available versions for each data type are (as of 2024-10-29):
 
-       | Data Type       | GRCh38 Versions                  | GRCh37 Versions      |
-       |-----------------|----------------------------------|----------------------|
-       | exomes          | 4.0, 4.1                         | 2.1, 2.1.1           |
-       | genomes         | 3.0, 3.1, 3.1.1, 3.1.2, 4.0, 4.1 | 2.1, 2.1.1           |
-       | joint           | 4.1                              | N/A                  |
+       ::
+
+           | Data Type       | GRCh38 Versions                  | GRCh37 Versions      |
+           |-----------------|----------------------------------|----------------------|
+           | exomes          | 4.0, 4.1                         | 2.1, 2.1.1           |
+           | genomes         | 3.0, 3.1, 3.1.1, 3.1.2, 4.0, 4.1 | 2.1, 2.1.1           |
+           | joint           | 4.1                              | N/A                  |
 
     :param data_type: Data type (exomes, genomes, or joint).
     :param version: gnomAD version.
