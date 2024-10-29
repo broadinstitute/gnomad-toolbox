@@ -16,8 +16,9 @@ def get_ht_by_datatype_and_version(
     """
     Get gnomAD HT by data type and version.
 
-    .. note:: Available versions for each data type are:
+    .. note::
 
+    Available versions for each data type are:
     | Data Type       | GRCh38 Versions                  | GRCh37 Versions      |
     |-----------------|----------------------------------|----------------------|
     | exomes          | 4.0, 4.1                         | 2.1, 2.1.1           |
