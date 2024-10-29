@@ -27,7 +27,6 @@ def get_ht_by_datatype_and_version(
     :param data_type: Data type (exomes, genomes, or joint).
     :param version: gnomAD version.
     :return: Hail Table.
-    :raises ValueError: If the data type or version is invalid.
     """
     # Mapping data types to version sets for GRCh38 and GRCh37
     versions_by_type = {
