@@ -19,6 +19,7 @@ def get_ht_by_datatype_and_version(
     .. note::
 
        Available versions for each data type are (as of 2024-10-29):
+
        | Data Type       | GRCh38 Versions                  | GRCh37 Versions      |
        |-----------------|----------------------------------|----------------------|
        | exomes          | 4.0, 4.1                         | 2.1, 2.1.1           |
