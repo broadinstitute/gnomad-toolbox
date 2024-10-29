@@ -69,7 +69,7 @@ def extract_callstats_for_multiple_ancs(
 
     :param ht: Input Table.
     :param gen_ancs: List of Ancestry Groups (e.g., 'afr', 'amr', 'asj', 'eas', 'fin', 'nfe',
-    'oth', 'sas').
+        'oth', 'sas').
     :return: Table with callstats for the given groups.
     """
     # Format the gen_ancs to lowercase if they're fed in as uppercase
