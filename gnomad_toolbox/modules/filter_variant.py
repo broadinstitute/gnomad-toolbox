@@ -1,13 +1,9 @@
 """Small functions to filter variants in gnomAD datasets, such as by allele frequency or by variant type."""
 
+from functools import reduce
+
 import hail as hl
-from gnomad.resources.grch38.gnomad import POPS_TO_REMOVE_FOR_POPMAX, coverage
-from gnomad.utils.filtering import filter_arrays_by_meta
-from gnomad.utils.vep import (
-    CSQ_CODING,
-    filter_vep_transcript_csqs,
-    get_most_severe_consequence_for_summary,
-)
+from gnomad.utils.vep import LOF_CSQ_SET
 
 
 def get_variant_count(
@@ -47,23 +43,29 @@ def get_variant_count(
     return counts
 
 
-def filter_by_csqs(ht: hl.Table, csqs: list[str]) -> hl.Table:
+def filter_by_interval(ht: hl.Table, interval: str) -> hl.Table:
     """
-    Filter variants by consequence.
+    Filter variants by interval.
 
     :param ht: Input Table.
-    :param csqs: List of consequences.
-    :return: Table with variants with the given consequences.
+    :param interval: Interval string. Format has to be "chr:start-end", e.g., "1:1000-2000".
+    :return: Table with variants in the interval.
     """
-    ht = ht.filter(
-        hl.any(
-            hl.map(
-                lambda x: (x.consequence_terms.contains(csqs)),
-                ht.vep.transcript_consequences,
+    if ht.locus.dtype.reference_genome.name == "GRCh38":
+        interval = "chr" + interval
+    ht = hl.filter_intervals(
+        ht,
+        [
+            hl.parse_locus_interval(
+                interval,
+                reference_genome=(
+                    "GRCh38"
+                    if ht.locus.dtype.reference_genome.name == "GRCh38"
+                    else "GRCh37"
+                ),
             )
-        )
+        ],
     )
-
     return ht
 
 
@@ -71,60 +73,102 @@ def filter_by_gene_symbol(ht: hl.Table, gene: str) -> hl.Table:
     """
     Filter variants in a gene.
 
+    .. note::
+           This function is to match the number of variants that you will get in the
+           gnomAD browser, which only focus on variants in "CDS" regions plus 75bp
+           up- and downstream. This is not the same as filtering by gene symbol with
+           our `filter_vep_transcript_csqs` function, which will include all variants.
+
     :param ht: Input Table.
-    :param gene: Gene symbol or.
+    :param gene: Gene symbol.
     :return: Table with variants in the gene.
     """
-    ht = filter_vep_transcript_csqs(
-        ht,
-        synonymous=False,
-        mane_select=True,
-        genes=[gene],
-        match_by_gene_symbol=True,
+    if ht.locus.dtype.reference_genome.name == "GRCh37":
+        gene_ht = hl.read_table(
+            "gs://gcp-public-data--gnomad/resources/grch37/browser/gnomad"
+            ".genes.GRCh37.GENCODEv19.ht"
+        )
+    else:
+        gene_ht = hl.read_table(
+            "gs://gcp-public-data--gnomad/resources/grch38/browser/gnomad"
+            ".genes.GRCh38.GENCODEv39.ht"
+        )
+
+    gene_ht = gene_ht.annotate(
+        cds_intervals=hl.array(
+            gene_ht.exons.filter(lambda exon: exon.feature_type == "CDS")
+        ).map(
+            lambda exon: hl.locus_interval(
+                hl.if_else(
+                    gene_ht.interval.start.dtype.reference_genome.name == "GRCh38",
+                    "chr" + gene_ht.chrom,
+                    gene_ht.chrom,
+                ),
+                exon.start - 75,
+                exon.stop + 75,
+                reference_genome=gene_ht.interval.start.dtype.reference_genome,
+                includes_end=True,
+            )
+        )
     )
+
+    intervals = gene_ht.filter(gene_ht.gencode_symbol == gene).cds_intervals.collect()[
+        0
+    ]
+
+    ht = hl.filter_intervals(ht, intervals)
 
     return ht
 
 
-def filter_to_coding_variants(ht: hl.Table) -> hl.Table:
+def filter_by_csqs(
+    ht: hl.Table, csqs: list[str], pass_filters: bool = True
+) -> hl.Table:
     """
-    Filter to coding variants.
+    Filter variants by consequences.
 
     :param ht: Input Table.
-    :return: Table with coding variants.
+    :param csqs: List of consequences to filter by. It can be specified as the
+         categories on the browser: pLoF, Missense / Inframe indel, Synonymous, Other.
+    :param pass_filters: Boolean if the variants pass the filters.
+    :return: Table with variants with the specified consequences.
     """
-    ht = filter_vep_transcript_csqs(
-        ht,
-        synonymous=False,
-        canonical=True,
-    )
-    ht = get_most_severe_consequence_for_summary(ht)
+    missense_inframe = ["missense_variant", "inframe_insertion", "inframe_deletion"]
 
-    filter_expr = {}
-    filter_expr["coding"] = hl.any(lambda csq: ht.most_severe_csq == csq, CSQ_CODING)
+    filter_expr = []
+    if "lof" in csqs:
+        filter_expr.append(
+            hl.literal(LOF_CSQ_SET).contains(ht.vep.most_severe_consequence)
+        )
 
-    ht = ht.filter(filter_expr["coding"])
+    if "synonymous" in csqs:
+        filter_expr.append(ht.vep.most_severe_consequence == "synonymous_variant")
 
-    return ht
+    if "missense" in csqs:
+        filter_expr.append(
+            hl.literal(missense_inframe).contains(ht.vep.most_severe_consequence)
+        )
 
+    if "other" in csqs:
+        excluded_csqs = hl.literal(
+            LOF_CSQ_SET + missense_inframe + ["synonymous_variant"]
+        )
+        filter_expr.append(~excluded_csqs.contains(ht.vep.most_severe_consequence))
 
-def filter_to_lof_variants(ht: hl.Table) -> hl.Table:
-    """
-    Filter to loss-of-function (LoF) variants.
+    if len(filter_expr) == 0:
+        raise ValueError(
+            "No valid consequence specified. Choose from 'lof', 'synonymous', 'missense', 'other'."
+        )
 
-    :param ht: Input Table.
-    :return: Table with LoF variants.
-    """
-    ht = filter_vep_transcript_csqs(
-        ht,
-        lof=True,
-        canonical=True,
-    )
-    ht = get_most_severe_consequence_for_summary(ht)
+    # Combine filter expressions with logical OR
+    if len(filter_expr) == 1:
+        combined_filter = filter_expr[0]
+    else:
+        combined_filter = reduce(lambda acc, expr: acc | expr, filter_expr)
 
-    filter_expr = {}
-    filter_expr["lof"] = hl.any(lambda csq: ht.most_severe_csq == csq, CSQ_CODING)
+    ht = ht.filter(combined_filter)
 
-    ht = ht.filter(filter_expr["lof"])
+    if pass_filters:
+        ht = ht.filter(hl.len(ht.filters) == 0)
 
     return ht
