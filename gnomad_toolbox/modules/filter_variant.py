@@ -3,7 +3,7 @@
 from functools import reduce
 
 import hail as hl
-from gnomad.utils.vep import LOF_CSQ_SET
+from gnomad.utils.vep import CSQ_CODING, LOF_CSQ_SET
 
 
 def get_variant_count(
@@ -83,6 +83,9 @@ def filter_by_gene_symbol(ht: hl.Table, gene: str) -> hl.Table:
     :param gene: Gene symbol.
     :return: Table with variants in the gene.
     """
+    # Make gene symbol uppercase
+    gene = gene.upper()
+
     if ht.locus.dtype.reference_genome.name == "GRCh37":
         gene_ht = hl.read_table(
             "gs://gcp-public-data--gnomad/resources/grch37/browser/gnomad"
@@ -151,9 +154,14 @@ def filter_by_csqs(
 
     if "other" in csqs:
         excluded_csqs = hl.literal(
-            LOF_CSQ_SET + missense_inframe + ["synonymous_variant"]
+            list(LOF_CSQ_SET) + missense_inframe + ["synonymous_variant"]
         )
         filter_expr.append(~excluded_csqs.contains(ht.vep.most_severe_consequence))
+
+    if "coding" in csqs:
+        filter_expr.append(
+            hl.literal(CSQ_CODING).contains(ht.vep.most_severe_consequence)
+        )
 
     if len(filter_expr) == 0:
         raise ValueError(
