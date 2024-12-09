@@ -12,8 +12,8 @@ ggnomad_toolbox/
 │   ├── constraint.py    # Functions to filter constraint metrics (e.g., observed/expected ratios).
 │   ├── coverage.py      # Functions to filter variants or regions based on coverage thresholds.
 │   ├── frequency.py     # Functions to filter variants by allele frequency thresholds.
-│   ├── interval.py      # Functions to filter variants within specified genomic intervals and genes.
 │   ├── pext.py          # Functions to filter variants using predicted expression (pext) scores.
+|   ├── variant.py       # Functions to filter to a specific variant or set of variants.
 │   ├── vep.py           # Functions to filter variants based on VEP (Variant Effect Predictor) annotations.
 │
 ├── analysis/
