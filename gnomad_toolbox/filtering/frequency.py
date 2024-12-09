@@ -1,9 +1,8 @@
-"""Extract callstats from 'freq' of gnomAD HTs."""
+"""Functions for filtering the gnomAD sites HT frequency data."""
 
-from typing import List, Optional
+from typing import List
 
 import hail as hl
-from gnomad.resources.grch38.gnomad import POPS_TO_REMOVE_FOR_POPMAX
 from gnomad.utils.filtering import filter_arrays_by_meta
 
 

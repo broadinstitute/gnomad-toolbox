@@ -21,16 +21,6 @@ DOCS_DIRECTORY = os.path.join(REPOSITORY_ROOT_PATH, "docs")
 
 EXCLUDE_PACKAGES = ["tests"]
 
-EXCLUDE_TOP_LEVEL_PACKAGES = []
-"""
-List of packages/modules to exclude from API reference documentation.
-
-This should be a list of strings where each string is the full name (from the top level)
-of a package or module to exclude. For example, if 'gnomad_toolbox' includes a
-'example_notebooks' that you want to exclude, you would add
-'gnomad_toolbox.example_notebooks' to this list.
-"""
-
 PACKAGE_DOC_TEMPLATE = """{title}
 
 {package_doc}
@@ -119,7 +109,11 @@ def write_module_doc(module_name):
     write_file(doc_path, doc)
 
 
-def write_package_doc(package_name):
+def write_package_doc(
+    package_name,
+    package_doc = None,
+    doc_path = None,
+):
     """Write API reference documentation file for a package."""
     package = importlib.import_module(package_name)
 
@@ -139,32 +133,21 @@ def write_package_doc(package_name):
 
     doc = PACKAGE_DOC_TEMPLATE.format(
         title=format_title(package_name),
-        package_doc=package.__doc__ or "",
+        package_doc= package_doc or package.__doc__ or "",
         module_links="\n    ".join(module_links),
     )
 
-    doc_path = package_doc_path(package)
+    doc_path = doc_path or package_doc_path(package)
     write_file(doc_path, doc)
 
 
 if __name__ == "__main__":
-    packages = setuptools.find_namespace_packages(
-        where=REPOSITORY_ROOT_PATH, include=["gnomad_toolbox.*"]
-    )
-    top_level_packages = [
-        pkg for pkg in packages if pkg.count(".") == 1 and pkg not in EXCLUDE_TOP_LEVEL_PACKAGES
-    ]
-
-    for pkg in top_level_packages:
-        write_package_doc(pkg)
-
-    root_doc = PACKAGE_DOC_TEMPLATE.format(
-        title=format_title("gnomad_toolbox"),
-        package_doc="",
-        module_links="\n    ".join(
-            f"{pkg.split('.')[1]} <{pkg.split('.')[1]}/index>"
-            for pkg in top_level_packages
+    write_package_doc(
+        "gnomad_toolbox",
+        package_doc=(
+            "This repository provides a set of Python functions to simplify working "
+            "with gnomAD Hail Tables. It includes tools for data access, filtering, "
+            "and analysis."
         ),
+        doc_path=os.path.join(DOCS_DIRECTORY, "api_reference", "index.rst"),
     )
-
-    write_file(os.path.join(DOCS_DIRECTORY, "api_reference", "index.rst"), root_doc)
