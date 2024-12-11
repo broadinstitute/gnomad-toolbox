@@ -48,6 +48,8 @@ RELEASES = {
 }
 
 
+# TODO: Are there other things we want to store in a session? Like a PASS variants only
+#  variable?
 class GnomADSession:
     """Class to manage the default data type and version for a gnomAD session."""
 

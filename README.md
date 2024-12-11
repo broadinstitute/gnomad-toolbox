@@ -24,6 +24,7 @@ ggnomad_toolbox/
 │   ├── intro_to_release_data.ipynb    # Jupyter notebook introducing the loading of gnomAD release data.
 ```
 
+# TODO: Add fully detailed info about how to install and open the notebooks.
 ## Getting started
 ### Install
 pip install -r requirements.txt
