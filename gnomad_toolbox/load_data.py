@@ -165,8 +165,7 @@ def _get_gnomad_release(
         )
     else:
         raise ValueError(
-            f"Version {version} is not available for {
-                data_type} in the {dataset} dataset. "
+            f"Version {version} is not available for {data_type} in the {dataset} dataset. "
             f"Available versions: GRCh38 - {data_type_releases['GRCh38']}, "
             f"GRCh37 - {data_type_releases['GRCh37']}."
         )
