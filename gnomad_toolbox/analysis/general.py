@@ -36,7 +36,7 @@ def freq_bin_expr(
 
     :param freq_expr: Array of structs containing frequency information.
     :param index: Which index of freq_expr to use for annotation. Default is 0.
-    :param ac_cutoffs: List of AC cutoffs to use for binning. 
+    :param ac_cutoffs: List of AC cutoffs to use for binning.
     :param af_cutoffs: List of AF cutoffs to use for binning.
     :param upper_af: Upper AF cutoff to use for binning.
     :return: StringExpression containing bin name based on input AC or AF.

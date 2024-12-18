@@ -99,9 +99,7 @@ class GnomADSession:
 
         # Check version availability.
         if version not in possible_versions:
-            raise ValueError(
-                f"Version {version} for {data_type} is not available."
-            )
+            raise ValueError(f"Version {version} for {data_type} is not available.")
 
         self.data_type = data_type
         self.version = version
@@ -147,9 +145,7 @@ def _get_gnomad_release(
 
     # Validate data type.
     if data_type_releases is None:
-        raise ValueError(
-            f"Invalid data_type '{data_type}' for dataset '{dataset}'."
-        )
+        raise ValueError(f"Invalid data_type '{data_type}' for dataset '{dataset}'.")
 
     # Check version availability for GRCh38 and GRCh37.
     if data_type_releases["GRCh38"] and version in data_type_releases["GRCh38"]:
