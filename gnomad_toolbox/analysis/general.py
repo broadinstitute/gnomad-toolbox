@@ -36,7 +36,9 @@ def freq_bin_expr(
 
     :param freq_expr: Array of structs containing frequency information.
     :param index: Which index of freq_expr to use for annotation. Default is 0.
-    :param ac_cutoffs:
+    :param ac_cutoffs: List of AC cutoffs to use for binning. 
+    :param af_cutoffs: List of AF cutoffs to use for binning.
+    :param upper_af: Upper AF cutoff to use for binning.
     :return: StringExpression containing bin name based on input AC or AF.
     """
     if isinstance(freq_expr, hl.expr.ArrayExpression):
@@ -46,7 +48,7 @@ def freq_bin_expr(
         ac_cutoffs = [(c, f"AC{c}") for c in ac_cutoffs]
 
     if af_cutoffs and isinstance(af_cutoffs[0], float):
-        af_cutoffs = [(c, f"{c*100}%") for c in af_cutoffs]
+        af_cutoffs = [(f, f"{f*100}%") for f in af_cutoffs]
 
     if isinstance(upper_af, float):
         upper_af = (upper_af, f"{upper_af*100}%")

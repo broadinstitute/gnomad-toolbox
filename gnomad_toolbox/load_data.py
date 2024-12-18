@@ -83,8 +83,7 @@ class GnomADSession:
         # Validate data type.
         if data_type and data_type not in DATA_TYPES:
             raise ValueError(
-                f"Data type {data_type} is invalid. Choose from 'exomes', 'genomes', "
-                f"or 'joint'."
+                f"Data type {data_type} is invalid. Choose from {DATA_TYPES}"
             )
 
         # Get all possible versions.
@@ -101,8 +100,7 @@ class GnomADSession:
         # Check version availability.
         if version not in possible_versions:
             raise ValueError(
-                f"Version {version} is not available"
-                f"{'' if data_type else f' for {data_type}'}. "
+                f"Version {version} for {data_type} is not available."
             )
 
         self.data_type = data_type
@@ -142,7 +140,7 @@ def _get_gnomad_release(
 
     # Validate dataset.
     if releases is None:
-        raise ValueError(f"{dataset} is invalid. Choose from {RELEASES.keys()}")
+        raise ValueError(f"{dataset} is invalid. Choose from {list(RELEASES.keys())}")
 
     # Get all releases for the given dataset and data_type.
     data_type_releases = releases.get(data_type)
@@ -150,8 +148,7 @@ def _get_gnomad_release(
     # Validate data type.
     if data_type_releases is None:
         raise ValueError(
-            f"Data type {data_type} is invalid. Choose from 'exomes', 'genomes', or "
-            "'joint'."
+            f"Invalid data_type '{data_type}' for dataset '{dataset}'."
         )
 
     # Check version availability for GRCh38 and GRCh37.
