@@ -134,7 +134,6 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
     """
     # Load the Hail Table if not provided
     ht = _get_gnomad_release(dataset="variant", **kwargs)
-
     ht = filter_to_gencode_cds(ht, genes=gene, padding=exon_padding_bp)
 
     return ht
