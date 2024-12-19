@@ -3,6 +3,7 @@
 from typing import Optional, Union
 
 import hail as hl
+from gnomad.utils.parse import parse_variant
 from gnomad.utils.reference_genome import get_reference_genome
 
 from gnomad_toolbox.load_data import _get_gnomad_release
@@ -47,21 +48,8 @@ def get_single_variant(
     # Determine the reference genome build for the ht.
     build = get_reference_genome(ht.locus).name
 
-    # TODO: Move this to gnomad_methods.
-    # Parse the variant string if provided.
-    try:
-        if variant and ":" not in variant:
-            contig, position, ref, alt = variant.split("-")
-        if all([contig, position, ref, alt]):
-            variant = f"{contig}:{position}:{ref}:{alt}"
-        variant = hl.eval(hl.parse_variant(variant, reference_genome=build))
-    except ValueError:
-        raise ValueError(
-            f"Invalid variant format: {variant}. Expected format: chr12-235245-A-C "
-            f"or chr12:235245:A:C"
-        )
-
     # Filter to the Locus of the variant of interest.
+    variant = parse_variant(variant, contig, position, ref, alt, build)
     ht = hl.filter_intervals(
         ht, [hl.interval(variant.locus, variant.locus, includes_end=True)]
     )
@@ -72,7 +60,8 @@ def get_single_variant(
     # Check if the variant exists.
     if ht.count() == 0:
         hl.utils.warning(
-            f"No variant found at {variant.locus} with alleles {variant.alleles}"
+            f"No variant found at {hl.eval(variant.locus)} with alleles "
+            f"{hl.eval(variant.alleles)}"
         )
 
     return ht

@@ -1,5 +1,6 @@
 # We're using the main branch of gnomad_method on github rather than the pip version
-git+https://github.com/broadinstitute/gnomad_methods@main
+# TODO: Decide on how to handle this. We might just need to have more releases of gnomad_methods.
+#git+https://github.com/broadinstitute/gnomad_methods@main
 hail
 jupyter
 jupyter_contrib_nbextensions
