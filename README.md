@@ -70,6 +70,18 @@ Miniconda is a lightweight distribution of Conda that includes just Conda and it
    cd gnomad-toolbox
    pip install -r requirements.txt
     ```
+   **Note:** Hail 0.2.127+ requires Java 8 or Java 11 and jupyter labs requires Java
+   11+, and if you have an Apple M1 or M2, you must have arm64 Java installed, you
+   can first check your Java version by running:
+   ```commandline
+    java -version
+    ```
+   and check if you have the arm64 Java by running:
+   ```commandline
+    file $JAVA_HOME/bin/java
+    ```
+   If you don't have the arm64 Java, you can find it [here](https://www.azul.com/downloads/?os=macos&architecture=arm-64-bit&package=jre#zulu)
+
    You might encounter errors when installing the dependencies, such as `pg_config
    executable not found`. If so, you may need to install additional system packages.
    For example, on Ubuntu, you can install the `libpq-dev` package:
