@@ -48,7 +48,7 @@ Miniconda is a lightweight distribution of Conda that includes just Conda and it
     bash Miniconda3-latest-Linux-x86_64.sh
     ```
     •	Windows: Run the installer executable and follow the installation wizard.
-# TODO: Will we encourage users to use Windows?
+        (# TODO: Will we encourage users to use Windows?)
 3. Confirm the installation by running:
    ```
    conda --version
