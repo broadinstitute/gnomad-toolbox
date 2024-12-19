@@ -116,7 +116,7 @@ The Google Cloud SDK is required to interact with Google Cloud services and acce
    gcloud config set project {YOUR_PROJECT_ID}
    ```
 
-## Configure a Service Account
+### Configure a Service Account
 You will need to create a service account in gcloud console IAM & Admin or using
 gcloud CLI. Then you can create a key for service account and set the GOOGLE_APPLICATION_CREDENTIALS
 variable to the path of the key file.
