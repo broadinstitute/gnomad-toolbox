@@ -69,17 +69,17 @@ Miniconda is a lightweight distribution of Conda that includes just Conda and it
    git clone https://github.com/broadinstitute/gnomad-toolbox.git
    cd gnomad-toolbox
    pip install -r requirements.txt
-    ```
+   ```
    **Note:** Hail 0.2.127+ requires Java 8 or Java 11 and jupyter labs requires Java
    11+, and if you have an Apple M1 or M2, you must have arm64 Java installed, you
    can first check your Java version by running:
    ```commandline
     java -version
-    ```
+   ```
    and check if you have the arm64 Java by running:
    ```commandline
     file $JAVA_HOME/bin/java
-    ```
+   ```
    If you don't have the arm64 Java, you can find it [here](https://www.azul.com/downloads/?os=macos&architecture=arm-64-bit&package=jre#zulu)
 
    You might encounter errors when installing the dependencies, such as `pg_config
@@ -87,24 +87,24 @@ Miniconda is a lightweight distribution of Conda that includes just Conda and it
    For example, on Ubuntu, you can install the `libpq-dev` package:
    ```commandline
     sudo apt-get install libpq-dev
-    ```
+   ```
    or on macOS, you can install the `postgresql` package:
    ```commandline
     brew install postgresql
-    ```
+   ```
 
 ### Verify the Setup
-1.	Start a Python shell and test if Hail and gnomad_toolbox are working:
-```commandline
-import hail as hl
-from gnomad_toolbox.analysis.general import get_variant_count_by_freq_bin
-hl.init()
-print("Hail and gnomad_toolbox setup is complete!")
-```
-Or open the notebooks:
-```commandline
-jupyter lab
-```
+   Start a Python shell and test if Hail and gnomad_toolbox are working:
+   ```commandline
+   import hail as hl
+   from gnomad_toolbox.analysis.general import get_variant_count_by_freq_bin
+   hl.init()
+   print("Hail and gnomad_toolbox setup is complete!")
+   ```
+   Or open the notebooks:
+   ```commandline
+   jupyter lab
+   ```
 
 ## Part2: Accessing gnomAD Data Locally with example notebooks
 If you already have experience with gcloud and have no problem running these notebooks,
@@ -113,8 +113,7 @@ you can skip this section.
 ### Install Google Cloud SDK (gcloud)
 
 The Google Cloud SDK is required to interact with Google Cloud services and access gnomAD public data locally.
-1. Follow the official Google Cloud SDK installation [guide](https://cloud.google.
-   com/sdk/docs/install) for your operating system.
+1. Follow the official Google Cloud SDK installation [guide](https://cloud.google.com/sdk/docs/install) for your operating system.
 2. After installation, initialize gcloud to log in and set up your default project:
    ```
    gcloud init
@@ -130,13 +129,12 @@ The Google Cloud SDK is required to interact with Google Cloud services and acce
 
 ### Configure a Service Account
 You will need to create a service account in gcloud console IAM & Admin or using
-gcloud CLI. Then you can create a key for service account and set the GOOGLE_APPLICATION_CREDENTIALS
-variable to the path of the key file.
-   ```commandline
-    gcloud iam service-accounts keys create hail-local-sa-key.json --iam-account {YOUR_SERVICE_ACCOUNT}
+cloud CLI. Then you can create a key for service account and set the key.
 
-    export GOOGLE_APPLICATION_CREDENTIALS=./hail-local-sa-key.json
+   ```commandline
+   gcloud iam service-accounts keys create hail-local-sa-key.json --iam-account {YOUR_SERVICE_ACCOUNT}
+   export GOOGLE_APPLICATION_CREDENTIALS=./hail-local-sa-key.json
    ```
 Now, you can access gnomAD data locally using the gnomad_toolbox functions, however,
-avoid running queries on the full dataset as it may take a long time and consume a
-lot of resources, and most importantly, it may incur costs.
+you should avoid running queries on the full dataset as it may take a long time and
+consume a lot of resources, and most importantly, it may generate costs.
