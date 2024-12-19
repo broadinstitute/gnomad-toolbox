@@ -24,81 +24,64 @@ ggnomad_toolbox/
 │   ├── intro_to_release_data.ipynb    # Jupyter notebook introducing the loading of gnomAD release data.
 ```
 
-# TODO: Add fully detailed info about how to install and open the notebooks.
-## Getting started
-### Install
-pip install -r requirements.txt
+## Setting Up Your Environment for Hail and gnomAD Toolbox
 
-### Opening the notebooks
-jupyter lab
-
-# Setting Up Your Environment for Hail and gnomAD Toolbox
-
-This guide provides step-by-step instructions to set up a working environment for using Hail and the gnomad_toolbox. The steps include installing Miniconda, creating a Conda environment, installing the necessary dependencies, and configuring the service account.
+This guide provides step-by-step instructions to set up a working environment for
+using Hail and the gnomad_toolbox.
 
 Prerequisites
 
 Before starting, ensure you have the following:
-	•	Administrator access to your system to install software.
-	•	Internet connection for downloading dependencies.
+* Administrator access to your system to install software.
+* Internet connection for downloading dependencies.
 
-## Step 1: Install Miniconda
+
+## Part 1: Setting Up Your Environment
+
+### Install Miniconda
 Miniconda is a lightweight distribution of Conda that includes just Conda and its dependencies.
 1. Download Miniconda for your system from the [official website](https://docs.anaconda.com/miniconda/install/).
 2. Follow the installation instructions for your operating system:
+
 	•	Linux/macOS: Run the installer script in your terminal:
-```
-bash Miniconda3-latest-Linux-x86_64.sh
-```
+    ```
+    bash Miniconda3-latest-Linux-x86_64.sh
+    ```
     •	Windows: Run the installer executable and follow the installation wizard.
-3. Confirm the insstallation by running:
-```
-conda --version
-```
+# TODO: Will we encourage users to use Windows?
+3. Confirm the installation by running:
+   ```
+   conda --version
+   ```
 
-## Step 2: Install Google Cloud SDK (gcloud)
-
-The Google Cloud SDK is required to interact with Google Cloud services, including setting up authentication for Hail.
-1. Follow the official Google Cloud SDK installation guide for your operating system.
-2. After installation, initialize gcloud:
-```
-gcloud init
-```
-3. Authenticate with your Google account:
-```
-gcloud auth login
-```
-4. Set the default project:
-```
-gcloud config set project broad-mpg-gnomad
-```
-
-## Step 43: Configure the Service Account
-```commandline
-gcloud iam service-accounts keys create hail-local-sa-key.json --iam-account hail-local-sa@broad-mpg-gnomad.iam.gserviceaccount.com
-export GOOGLE_APPLICATION_CREDENTIALS=path-to-your-key/hail-local-sa-key.json
-```
-
-## Step 4: Create a Conda Environment
-1. Create a new Conda environment with a specific version of Hail (here we use Hail
-   0.2.132 and Python 3.11):
-```commandline
-conda create -n gnomad-toolbox hail=0.2.132 python=3.11
-```
+### Create a Conda Environment
+1. Create a new Conda environment with a specific version of Python:
+   ```commandline
+   conda create -n gnomad-toolbox python=3.11
+   ```
 2. Activate the Conda environment:
-```commandline
-conda activate gnomad-toolbox
-```
-3. Clone the gnomad-toolbox repository:
-```commandline
-cd /path/to/your/directory
-git clone https://github.com/broadinstitute/gnomad-toolbox.git
-cd gnomad-toolbox
-pip install -r requirements.txt
-pip install git+https://github.com/broadinstitute/gnomad-toolbox.git
-```
+   ```commandline
+   conda activate gnomad-toolbox
+   ```
+3. Clone the gnomad-toolbox repository and install the dependencies:
+   ```commandline
+   cd /path/to/your/directory
+   git clone https://github.com/broadinstitute/gnomad-toolbox.git
+   cd gnomad-toolbox
+   pip install -r requirements.txt
+    ```
+   You might encounter errors when installing the dependencies, such as `pg_config
+   executable not found`. If so, you may need to install additional system packages.
+   For example, on Ubuntu, you can install the `libpq-dev` package:
+   ```commandline
+    sudo apt-get install libpq-dev
+    ```
+   or on macOS, you can install the `postgresql` package:
+   ```commandline
+    brew install postgresql
+    ```
 
-## Step 5: Verify the Setup
+### Verify the Setup
 1.	Start a Python shell and test if Hail and gnomad_toolbox are working:
 ```commandline
 import hail as hl
@@ -110,3 +93,38 @@ Or open the notebooks:
 ```commandline
 jupyter lab
 ```
+
+## Part2: Accessing gnomAD Data Locally with example notebooks
+If you already have experience with gcloud and have no problem running these notebooks,
+you can skip this section.
+
+### Install Google Cloud SDK (gcloud)
+
+The Google Cloud SDK is required to interact with Google Cloud services and access gnomAD public data locally.
+1. Follow the official Google Cloud SDK installation [guide](https://cloud.google.
+   com/sdk/docs/install) for your operating system.
+2. After installation, initialize gcloud to log in and set up your default project:
+   ```
+   gcloud init
+   ```
+3. You can check your gcloud config by:
+   ```
+   gcloud config list
+   ```
+   or set the default project:
+   ```
+   gcloud config set project {YOUR_PROJECT_ID}
+   ```
+
+## Configure a Service Account
+You will need to create a service account in gcloud console IAM & Admin or using
+gcloud CLI. Then you can create a key for service account and set the GOOGLE_APPLICATION_CREDENTIALS
+variable to the path of the key file.
+   ```commandline
+    gcloud iam service-accounts keys create hail-local-sa-key.json --iam-account {YOUR_SERVICE_ACCOUNT}
+
+    export GOOGLE_APPLICATION_CREDENTIALS=./hail-local-sa-key.json
+   ```
+Now, you can access gnomAD data locally using the gnomad_toolbox functions, however,
+avoid running queries on the full dataset as it may take a long time and consume a
+lot of resources, and most importantly, it may incur costs.
