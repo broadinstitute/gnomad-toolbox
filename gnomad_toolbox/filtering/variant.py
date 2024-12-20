@@ -111,11 +111,11 @@ def filter_by_intervals(
     return ht
 
 
+# TODO: Add a pre-processing step to filter out these genes on chrY to
+# match the gnomAD browser.
 def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.Table:
     """
     Filter variants in a gene.
-
-    # TODO: Add a pre-processing step to filter out these genes on chrY to match the gnomAD browser.
 
     .. note::
 
