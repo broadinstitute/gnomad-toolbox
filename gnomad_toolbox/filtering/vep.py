@@ -23,7 +23,7 @@ def filter_by_consequence_category(
 
     The [VEP](https://useast.ensembl.org/info/docs/tools/vep/index.html) consequences included in each category are:
 
-        pLoF
+        pLoF:
 
             - transcript_ablation
             - splice_acceptor_variant
@@ -31,7 +31,7 @@ def filter_by_consequence_category(
             - stop_gained
             - frameshift_variant
 
-        Missense / Inframe indel
+        Missense / Inframe indel:
 
             - stop_lost
             - start_lost
@@ -39,11 +39,11 @@ def filter_by_consequence_category(
             - inframe_deletion
             - missense_variant
 
-        Synonymous
+        Synonymous:
 
             - synonymous_variant
 
-        `Other
+        Other:
 
             - protein_altering_variant
             - incomplete_terminal_codon_variant
