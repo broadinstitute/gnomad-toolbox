@@ -3,7 +3,7 @@
 from functools import reduce
 
 import hail as hl
-from gnomad.utils.vep import CSQ_CODING, LOF_CSQ_SET
+from gnomad.utils.vep import CSQ_CODING, LOF_CSQ_SET, filter_vep_transcript_csqs
 
 from gnomad_toolbox.load_data import _get_gnomad_release
 
@@ -75,23 +75,49 @@ def filter_by_csqs(
     return ht
 
 
-# TODO: The following was in one of the notebooks, and I think we should add a wrapper
-#  around this function to make it much simpler instead of using it in the notebook.
+def filter_to_plofs(gene: str, select_fields: bool = False, **kwargs) -> hl.Table:
+    """
+    Filter to observed pLoF variants that we used to calculate the gene constraint metrics.
 
-# Filter to LOFTEE high-confidence variants for certain genes
+    .. note::
 
-# In this example, we are filtering to variants in ASH1L that are LOFTEE high-confidence
-# (with no flags) in the MANE select transcript.
+            pLOF variants meets the following requirements:
+            - High-confidence LOFTEE variants (without any flags),
+            - Only variants in the MANE Select transcript,
+            - PASS variants that are SNVs with MAF ≤ 0.1%,
+            - Exome median depth ≥ 30 (# TODO: This is changing in v4 constraint?)
 
-# from gnomad.utils.vep import filter_vep_transcript_csqs
-# ht = get_gnomad_release(data_type='exomes', version='4.1')
-# ht = filter_vep_transcript_csqs(
-#    ht,
-#    synonymous=False,
-#    mane_select=True,
-#    genes=["ASH1L"],
-#    match_by_gene_symbol=True,
-#    additional_filtering_criteria=[lambda x: (x.lof == "HC") & hl.is_missing(x.lof_flags)],
-# )
-# ht.show()
-# ht.count()
+    :param gene: Gene symbol.
+    :param select_fields: Boolean if the output should be limited to specific fields.
+    :return: Table with pLoF variants.
+    """
+    # TODO: need to think more how to optimize this so it won't use a lot of memory
+    var_ht = _get_gnomad_release(dataset="variant", **kwargs)
+    cov_ht = _get_gnomad_release(dataset="coverage", **kwargs)
+
+    var_ht = filter_vep_transcript_csqs(
+        var_ht,
+        synonymous=False,
+        mane_select=True,
+        genes=[gene],
+        match_by_gene_symbol=True,
+        additional_filtering_criteria=[
+            lambda x: (x.lof == "HC") & hl.is_missing(x.lof_flags)
+        ],
+    )
+
+    var_ht = var_ht.filter(
+        (hl.len(var_ht.filters) == 0)
+        & (var_ht.allele_info.allele_type == "snv")
+        & (var_ht.freq[0].AF <= 0.001)
+        & (cov_ht[var_ht.locus].median_approx >= 30)
+    )
+
+    if select_fields:
+        var_ht = var_ht.select(
+            freq=var_ht.freq[0],
+            csq=var_ht.vep.transcript_consequences[0].consequence_terms,
+            coverage=cov_ht[var_ht.locus],
+        )
+
+    return var_ht
