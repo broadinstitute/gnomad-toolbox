@@ -3,6 +3,7 @@
 from typing import Optional, Union
 
 import hail as hl
+from gnomad.utils.filtering import filter_to_gencode_cds
 from gnomad.utils.parse import parse_variant
 from gnomad.utils.reference_genome import get_reference_genome
 
@@ -99,6 +100,8 @@ def filter_by_intervals(
     return ht
 
 
+# TODO: Add a pre-processing step to filter out these genes on chrY to
+# match the gnomAD browser.
 def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.Table:
     """
     Filter variants in a gene.
@@ -109,6 +112,11 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
            gnomAD browser, which only focus on variants in "CDS" regions plus
            75bp (default of `exon_padding_bp`) up- and downstream.
 
+           However, gnomAD browser used a preprocessed Gencode file which excluded
+           46 genes on chrY that share the same gene id as chrX. For example,
+           if you use this function to filter "ASMT" gene, you will get more variants
+           than shown in the gnomAD browser.
+
     :param gene: Gene symbol.
     :param exon_padding_bp: Number of base pairs to pad the CDS intervals. Default is
         75bp.
@@ -117,61 +125,6 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
     """
     # Load the Hail Table if not provided
     ht = _get_gnomad_release(dataset="variant", **kwargs)
-
-    # Determine the reference genome build for the ht.
-    build = get_reference_genome(ht.locus).name
-
-    # Make gene symbol uppercase
-    gene = gene.upper()
-
-    # TODO: Create a resource for this in gnomad_methods (is it different from our
-    #  current gencode resources?
-    # gene_ht = hl.read_table(
-    #    f"gs://gcp-public-data--gnomad/resources/{build.lower()}/browser/gnomad"
-    #    f".genes.{build}.GENCODEv{'19' if build == 'GRCh37' else '39'}.ht"
-    # )
-
-    # TODO: This actually takes a while to run locally for a single gene. Is there a
-    #  way to speed this up?
-
-    # Filter to the gene of interest.
-    # gene_ht = gene_ht.filter(gene_ht.gencode_symbol == gene)
-
-    # Get the CDS intervals for the gene.
-    # chrom_expr = hl.if_else(build == "GRCh38", "chr" + gene_ht.chrom, gene_ht.chrom)
-    # intervals = gene_ht.aggregate(
-    #    hl.agg.explode(
-    #        lambda exon: hl.agg.collect(
-    #            hl.locus_interval(
-    #                chrom_expr,
-    #                exon.start - 75,
-    #                exon.stop + 75,
-    #                reference_genome=build,
-    #                includes_end=True,
-    #            )
-    #        ),
-    #        gene_ht.exons.filter(lambda exon: exon.feature_type == "CDS"),
-    #    )
-    # )
-
-    # TODO: Consider this alternative approach to get the intervals from gencode. That
-    #  is not too bad time wise
-
-    from gnomad.resources.grch38.reference_data import gencode
-
-    gencode_ht = gencode.ht()
-    gencode_ht = gencode_ht.filter(
-        (gencode_ht.gene_name == gene) & ((gencode_ht.feature == "CDS"))
-    )
-    intervals = hl.locus_interval(
-        gencode_ht.interval.start.contig,
-        gencode_ht.interval.start.position - exon_padding_bp,
-        gencode_ht.interval.end.position + exon_padding_bp,
-        includes_start=gencode_ht.interval.includes_start,
-        includes_end=gencode_ht.interval.includes_end,
-        reference_genome=build,
-    ).collect()
-
-    ht = hl.filter_intervals(ht, intervals)
+    ht = filter_to_gencode_cds(ht, genes=gene, padding_bp=exon_padding_bp)
 
     return ht
