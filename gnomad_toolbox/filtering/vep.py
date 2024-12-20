@@ -98,18 +98,20 @@ def filter_by_consequence_category(
         + (synonymous_csqs if synonymous else [])
     )
 
-    filter_expr = hl.bool(True)
+    filter_expr = None
 
     if csqs:
-        filter_expr &= filter_vep_transcript_csqs_expr(ht.vep, csqs=csqs)
+        filter_expr = filter_vep_transcript_csqs_expr(ht.vep, csqs=csqs)
 
     if other:
-        filter_expr |= filter_vep_transcript_csqs_expr(
+        other_expr = filter_vep_transcript_csqs_expr(
             ht.vep, csqs=other_csqs, keep_csqs=False
         )
+        filter_expr = other_expr if filter_expr is None else (filter_expr | other_expr)
 
     if pass_filters:
-        filter_expr &= hl.len(ht.filters) == 0
+        pass_expr = hl.len(ht.filters) == 0
+        filter_expr = pass_expr if filter_expr is None else (filter_expr & pass_expr)
 
     return ht.filter(filter_expr)
 
