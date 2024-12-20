@@ -115,6 +115,8 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
     """
     Filter variants in a gene.
 
+    # TODO: Add a pre-processing step to filter out these genes on chrY to match the gnomAD browser.
+
     .. note::
 
            This function is to match the number of variants that you will get in the
