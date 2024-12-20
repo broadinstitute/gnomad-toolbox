@@ -1,78 +1,117 @@
 """Functions to filter gnomAD sites HT by VEP annotations."""
 
-from functools import reduce
-
 import hail as hl
-from gnomad.utils.vep import CSQ_CODING, LOF_CSQ_SET
+from gnomad.utils.vep import LOF_CSQ_SET, filter_vep_transcript_csqs_expr
 
 from gnomad_toolbox.load_data import _get_gnomad_release
 
-# TODO: I haven't looked over this function yet. Is there anything in gnomad_methods
-#  that could be used here? If not, is there anything here that should be moved to
-#  gnomad_methods?
 
-
-def filter_by_csqs(
-    csqs: list[str],
+# TODO: Check these csq sets, the ones in the code don't match what is listed on the
+#  browser. We should make sure they are consistent.
+def filter_by_consequence_category(
+    plof: bool = False,
+    missense: bool = False,
+    synonymous: bool = False,
+    other: bool = False,
     pass_filters: bool = True,
     **kwargs,
 ) -> hl.Table:
     """
-    Filter variants by VEP transcript consequences.
+    Filter gnomAD variants based on VEP consequence.
 
-    :param csqs: List of consequences to filter by. It can be specified as the
-         categories on the browser: pLoF, Missense / Inframe indel, Synonymous, Other.
+    https://gnomad.broadinstitute.org/help/consequence-category-filter
+
+    The [VEP](https://useast.ensembl.org/info/docs/tools/vep/index.html) consequences included in each category are:
+
+        pLoF
+
+            - transcript_ablation
+            - splice_acceptor_variant
+            - splice_donor_variant
+            - stop_gained
+            - frameshift_variant
+
+        Missense / Inframe indel
+
+            - stop_lost
+            - start_lost
+            - inframe_insertion
+            - inframe_deletion
+            - missense_variant
+
+        Synonymous
+
+            - synonymous_variant
+
+        `Other
+
+            - protein_altering_variant
+            - incomplete_terminal_codon_variant
+            - stop_retained_variant
+            - coding_sequence_variant
+            - mature_miRNA_variant
+            - 5_prime_UTR_variant
+            - 3_prime_UTR_variant
+            - non_coding_transcript_exon_variant
+            - non_coding_exon_variant
+            - NMD_transcript_variant
+            - non_coding_transcript_variant
+            - nc_transcript_variant
+            - downstream_gene_variant
+            - TFBS_ablation
+            - TFBS_amplification
+            - TF_binding_site_variant
+            - regulatory_region_ablation
+            - regulatory_region_amplification
+            - feature_elongation
+            - regulatory_region_variant
+            - feature_truncation
+            - intergenic_variant
+            - intron_variant
+            - splice_region_variant
+            - upstream_gene_variant
+
+    :param plof: Whether to include pLoF variants.
+    :param missense: Whether to include missense variants.
+    :param synonymous: Whether to include synonymous variants.
+    :param other: Whether to include other variants.
     :param pass_filters: Boolean if the variants pass the filters.
     :param kwargs: Arguments to pass to _get_gnomad_release.
     :return: Table with variants with the specified consequences.
     """
+    if not any([plof, missense, synonymous, other]):
+        raise ValueError(
+            "At least one of plof, missense, synonymous, or other must be True."
+        )
+
     # Load the Hail Table if not provided
     ht = _get_gnomad_release(dataset="variant", **kwargs)
 
-    missense_inframe = ["missense_variant", "inframe_insertion", "inframe_deletion"]
+    lof_csqs = list(LOF_CSQ_SET)
+    missense_csqs = ["missense_variant", "inframe_insertion", "inframe_deletion"]
+    synonymous_csqs = ["synonymous_variant"]
+    other_csqs = lof_csqs + missense_csqs + synonymous_csqs
 
-    filter_expr = []
-    if "lof" in csqs:
-        filter_expr.append(
-            hl.literal(LOF_CSQ_SET).contains(ht.vep.most_severe_consequence)
+    csqs = (
+        (lof_csqs if plof else [])
+        + (missense_csqs if missense else [])
+        + (synonymous_csqs if synonymous else [])
+    )
+
+    filter_expr = hl.bool(True)
+
+    if csqs:
+        filter_expr &= filter_vep_transcript_csqs_expr(ht.vep, csqs=csqs)
+
+    if other:
+        filter_expr |= filter_vep_transcript_csqs_expr(
+            ht.vep, csqs=other_csqs, keep_csqs=False
         )
-
-    if "synonymous" in csqs:
-        filter_expr.append(ht.vep.most_severe_consequence == "synonymous_variant")
-
-    if "missense" in csqs:
-        filter_expr.append(
-            hl.literal(missense_inframe).contains(ht.vep.most_severe_consequence)
-        )
-
-    if "other" in csqs:
-        excluded_csqs = hl.literal(
-            list(LOF_CSQ_SET) + missense_inframe + ["synonymous_variant"]
-        )
-        filter_expr.append(~excluded_csqs.contains(ht.vep.most_severe_consequence))
-
-    if "coding" in csqs:
-        filter_expr.append(
-            hl.literal(CSQ_CODING).contains(ht.vep.most_severe_consequence)
-        )
-
-    if len(filter_expr) == 0:
-        raise ValueError(
-            "No valid consequence specified. Choose from 'lof', 'synonymous', 'missense', 'other'."
-        )
-
-    # Combine filter expressions with logical OR
-    if len(filter_expr) == 1:
-        combined_filter = filter_expr[0]
-    else:
-        combined_filter = reduce(lambda acc, expr: acc | expr, filter_expr)
-
-    ht = ht.filter(combined_filter)
 
     if pass_filters:
-        ht = ht.filter(hl.len(ht.filters) == 0)
+        filter_expr &= hl.len(ht.filters) == 0
 
-    return ht
+    return ht.filter(filter_expr)
 
 
 # TODO: The following was in one of the notebooks, and I think we should add a wrapper
