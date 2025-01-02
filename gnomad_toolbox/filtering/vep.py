@@ -3,9 +3,11 @@
 from functools import reduce
 
 import hail as hl
+from gnomad.resources.grch37.reference_data import gencode as grch37_gencode
+from gnomad.resources.grch38.reference_data import gencode as grch38_gencode
 from gnomad.utils.vep import CSQ_CODING, LOF_CSQ_SET, filter_vep_transcript_csqs
 
-from gnomad_toolbox.load_data import _get_gnomad_release
+from gnomad_toolbox.load_data import _get_gnomad_release, gnomad_session
 
 # TODO: I haven't looked over this function yet. Is there anything in gnomad_methods
 #  that could be used here? If not, is there anything here that should be moved to
@@ -75,42 +77,90 @@ def filter_by_csqs(
     return ht
 
 
-def filter_to_plofs(gene: str, select_fields: bool = False, **kwargs) -> hl.Table:
+def filter_to_plofs(
+    gene_symbol: str, select_fields: bool = False, **kwargs
+) -> hl.Table:
     """
-    Filter to observed pLoF variants that we used to calculate the gene constraint metrics.
+        Filter to observed pLoF variants that we used to calculate the gene constraint metrics.
 
-    .. note::
+        .. note::
 
-            pLOF variants meets the following requirements:
-            - High-confidence LOFTEE variants (without any flags),
-            - Only variants in the MANE Select transcript,
-            - PASS variants that are SNVs with MAF ≤ 0.1%,
-            - Exome median depth ≥ 30 (# TODO: This is changing in v4 constraint?)
+                pLOF variants meets the following requirements:
+                - High-confidence LOFTEE variants (without any flags),
+                - Only variants in the MANE Select transcript,
+                - PASS variants that are SNVs with MAF ≤ 0.1%,
+                - Exome median depth ≥ 30 (# TODO: This is changing in v4 constraint?)
 
-    :param gene: Gene symbol.
-    :param select_fields: Boolean if the output should be limited to specific fields.
-    :return: Table with pLoF variants.
+    **Note: this number should match the number of observed pLOF SNVs on the gene page of gnomAD Browser.**
+
+        :param gene_symbol: Gene symbol.
+        :param select_fields: Boolean if the output should be limited to specific fields.
+        :return: Table with pLoF variants.
     """
-    # TODO: need to think more how to optimize this so it won't use a lot of memory
-    var_ht = _get_gnomad_release(dataset="variant", **kwargs)
-    cov_ht = _get_gnomad_release(dataset="coverage", **kwargs)
+    var_version = kwargs.pop("version", gnomad_session.version)
+    var_ht = _get_gnomad_release(dataset="variant", version=var_version, **kwargs)
 
+    # Determine the version of the coverage table
+    if var_version.startswith("4."):
+        cov_ht = _get_gnomad_release(dataset="coverage", version="4.0", **kwargs)
+    elif var_version.startswith("3."):
+        cov_ht = _get_gnomad_release(dataset="coverage", version="3.0.1", **kwargs)
+    elif var_version.startswith("2."):
+        cov_ht = _get_gnomad_release(dataset="coverage", version="2.1", **kwargs)
+    else:
+        raise ValueError(
+            f"Unrecognized version: '{var_version}'. Please specify a valid version."
+        )
+
+    # Get the gene interval from gen_ht
+    gen_ht = (
+        grch37_gencode.ht() if var_version.startswith("2.") else grch38_gencode.ht()
+    )
+    interval = (
+        gen_ht.filter(
+            (gen_ht.feature == "gene")
+            & (gen_ht.gene_name.lower() == gene_symbol.lower())
+        )
+        .select()
+        .collect()
+    )
+
+    if not interval:
+        raise ValueError(f"No interval found for gene: {gene_symbol}")
+
+    # Convert to a list of intervals
+    interval = [row["interval"] for row in interval]
+    var_ht = hl.filter_intervals(var_ht, interval)
+    cov_ht = hl.filter_intervals(cov_ht, interval)
+
+    # Filter to high-confidence LOFTEE variants
     var_ht = filter_vep_transcript_csqs(
         var_ht,
         synonymous=False,
-        mane_select=True,
-        genes=[gene],
+        mane_select=True if var_version.startswith("4.") else False,
+        # TODO: When this function is applied to DRD2 gene in v4.1, it will get 7 pLoF
+        #  variants instead of 8 on the browser and the 4.1 constraint table,
+        #  because one of them is not in mane select, nor in canonical transcript.
+        genes=[gene_symbol.upper()],
         match_by_gene_symbol=True,
         additional_filtering_criteria=[
-            lambda x: (x.lof == "HC") & hl.is_missing(x.lof_flags)
+            lambda x: (x.lof == "HC")
+            & (hl.is_missing(x.lof_flags) | (x.lof_flags == ""))
         ],
     )
 
+    if var_version.startswith("2."):
+        allele_type_expr = var_ht.allele_type
+        cov_cut_expr = cov_ht[var_ht.locus].median
+    else:
+        allele_type_expr = var_ht.allele_info.allele_type
+        cov_cut_expr = cov_ht[var_ht.locus].median_approx
+
     var_ht = var_ht.filter(
         (hl.len(var_ht.filters) == 0)
-        & (var_ht.allele_info.allele_type == "snv")
+        & (allele_type_expr == "snv")
         & (var_ht.freq[0].AF <= 0.001)
-        & (cov_ht[var_ht.locus].median_approx >= 30)
+        & (cov_cut_expr >= 30)
     )
 
     if select_fields:
