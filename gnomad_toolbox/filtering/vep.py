@@ -1,10 +1,13 @@
 """Functions to filter gnomAD sites HT by VEP annotations."""
 
 import hail as hl
-
 from gnomad.resources.grch37.reference_data import gencode as grch37_gencode
 from gnomad.resources.grch38.reference_data import gencode as grch38_gencode
-from gnomad.utils.vep import LOF_CSQ_SET, filter_vep_transcript_csqs, filter_vep_transcript_csqs_expr
+from gnomad.utils.vep import (
+    LOF_CSQ_SET,
+    filter_vep_transcript_csqs,
+    filter_vep_transcript_csqs_expr,
+)
 
 from gnomad_toolbox.load_data import _get_gnomad_release, gnomad_session
 
