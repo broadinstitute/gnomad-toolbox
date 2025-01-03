@@ -21,7 +21,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/broadinstitute/gnomad-toolbox",
-    packages=setuptools.find_namespace_packages(include=["gnomad_toolbox.*"]),
+    packages=setuptools.find_namespace_packages(include=["gnomad_toolbox*"]),
     project_urls={
         "Documentation": "https://broadinstitute.github.io/gnomad-toolbox/",
         "Source Code": "https://github.com/broadinstitute/gnomad-toolbox",
