@@ -3,6 +3,8 @@
 from typing import Optional, Union
 
 import hail as hl
+from gnomad.resources.grch37.gnomad import browser_gene as browser_gene_grch37
+from gnomad.resources.grch38.gnomad import browser_gene as browser_gene_grch38
 from gnomad.utils.filtering import filter_to_gencode_cds
 from gnomad.utils.reference_genome import get_reference_genome
 
@@ -136,6 +138,46 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
     """
     # Load the Hail Table if not provided
     ht = _get_gnomad_release(dataset="variant", **kwargs)
-    ht = filter_to_gencode_cds(ht, genes=gene, padding_bp=exon_padding_bp)
+    if ht.locus.dtype.reference_genome.name == "GRCh37":
+        gene_ht = browser_gene_grch37().ht()
+    else:
+        gene_ht = browser_gene_grch38().ht()
+
+    gene_ht = gene_ht.filter(gene_ht.gencode_symbol.lower() == gene.lower())
+
+    # Get intervals based on feature type (CDS > UTR > Exons) with padding
+    def get_intervals(feature_type: str) -> hl.expr.ArrayExpression:
+        return hl.array(
+            gene_ht.exons.filter(lambda exon: exon.feature_type == feature_type)
+        ).map(
+            lambda exon: hl.locus_interval(
+                hl.if_else(
+                    gene_ht.interval.start.dtype.reference_genome.name == "GRCh38",
+                    "chr" + gene_ht.chrom,
+                    gene_ht.chrom,
+                ),
+                exon.start - exon_padding_bp,
+                exon.stop + exon_padding_bp,
+                reference_genome=gene_ht.interval.start.dtype.reference_genome,
+                includes_end=True,
+            )
+        )
+
+    cds_intervals = get_intervals("CDS")
+    utr_intervals = get_intervals("UTR")
+    exon_intervals = get_intervals("exon")
+
+    # Determine which intervals to use
+    gene_ht = gene_ht.annotate(
+        intervals=hl.if_else(
+            hl.len(cds_intervals) > 0,
+            cds_intervals,
+            hl.if_else(hl.len(utr_intervals) > 0, utr_intervals, exon_intervals),
+        )
+    )
+
+    intervals = gene_ht.intervals.collect()[0]
+
+    ht = hl.filter_intervals(ht, intervals)
 
     return ht
