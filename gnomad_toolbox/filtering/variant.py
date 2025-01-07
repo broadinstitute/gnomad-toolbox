@@ -5,7 +5,6 @@ from typing import Optional, Union
 import hail as hl
 from gnomad.resources.grch37.gnomad import browser_gene as browser_gene_grch37
 from gnomad.resources.grch38.gnomad import browser_gene as browser_gene_grch38
-from gnomad.utils.filtering import filter_to_gencode_cds
 from gnomad.utils.parse import parse_variant
 from gnomad.utils.reference_genome import get_reference_genome
 from gnomad.utils.vep import filter_vep_transcript_csqs
