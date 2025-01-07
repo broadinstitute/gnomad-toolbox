@@ -8,6 +8,7 @@ from gnomad.resources.grch38.gnomad import browser_gene as browser_gene_grch38
 from gnomad.utils.filtering import filter_to_gencode_cds
 from gnomad.utils.parse import parse_variant
 from gnomad.utils.reference_genome import get_reference_genome
+from gnomad.utils.vep import filter_vep_transcript_csqs
 
 from gnomad_toolbox.load_data import _get_gnomad_release
 
@@ -102,37 +103,36 @@ def filter_by_intervals(
     return ht
 
 
-# TODO: Add a pre-processing step to filter out these genes on chrY to
-# match the gnomAD browser.
 def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.Table:
     """
-    Filter variants in a gene.
+    Filter variants in a gene by gene symbol.
 
     .. note::
-
-           This function is to match the number of variants that you will get in the
-           gnomAD browser, which only focus on variants in "CDS" regions plus
-           75bp (default of `exon_padding_bp`) up- and downstream.
-
-           However, gnomAD browser used a preprocessed Gencode file which excluded
-           46 genes on chrY that share the same gene id as chrX. For example,
-           if you use this function to filter "ASMT" gene, you will get more variants
-           than shown in the gnomAD browser.
+       This is to match the browser display, which includes variants in the CDS +
+       75bp padding for protein-coding genes, and UTR/exons + 75bp padding for
+       non-protein-coding genes.
 
     :param gene: Gene symbol.
-    :param exon_padding_bp: Number of base pairs to pad the CDS intervals. Default is
-        75bp.
+    :param exon_padding_bp: Number of base pairs to pad the CDS intervals. Default is 75bp.
     :param kwargs: Arguments to pass to `_get_gnomad_release`.
     :return: Table with variants in the gene.
     """
     # Load the Hail Table if not provided
     ht = _get_gnomad_release(dataset="variant", **kwargs)
-    if ht.locus.dtype.reference_genome.name == "GRCh37":
-        gene_ht = browser_gene_grch37().ht()
-    else:
-        gene_ht = browser_gene_grch38().ht()
 
-    gene_ht = gene_ht.filter(gene_ht.gencode_symbol.lower() == gene.lower())
+    # Load gene information
+    gene_ht = (
+        browser_gene_grch37().ht()
+        if ht.locus.dtype.reference_genome.name == "GRCh37"
+        else browser_gene_grch38().ht()
+    )
+
+    # Pre-filter to the specified gene (case-insensitive)
+    gene = gene.upper()
+    gene_ht = gene_ht.filter(gene_ht.gencode_symbol == gene)
+
+    # First get the variants in the gene region
+    ht = hl.filter_intervals(ht, hl.array(gene_ht.interval.take(1)))
 
     # Get intervals based on feature type (CDS > UTR > Exons) with padding
     def get_intervals(feature_type: str) -> hl.expr.ArrayExpression:
@@ -148,6 +148,7 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
                 exon.start - exon_padding_bp,
                 exon.stop + exon_padding_bp,
                 reference_genome=gene_ht.interval.start.dtype.reference_genome,
+                includes_start=True,
                 includes_end=True,
             )
         )
@@ -165,8 +166,13 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
         )
     )
 
-    intervals = gene_ht.intervals.collect()[0]
+    intervals = gene_ht.intervals.take(1)[0]
 
     ht = hl.filter_intervals(ht, intervals)
+
+    # Additional filtering (e.g., with VEP consequences)
+    ht = filter_vep_transcript_csqs(
+        ht, genes=[gene], synonymous=False, match_by_gene_symbol=True
+    )
 
     return ht
