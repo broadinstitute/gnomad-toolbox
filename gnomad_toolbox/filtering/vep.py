@@ -1,5 +1,7 @@
 """Functions to filter gnomAD sites HT by VEP annotations."""
 
+from typing import List
+
 import hail as hl
 from gnomad.resources.grch37.reference_data import gencode as grch37_gencode
 from gnomad.resources.grch38.reference_data import gencode as grch38_gencode
@@ -9,7 +11,11 @@ from gnomad.utils.vep import (
     filter_vep_transcript_csqs_expr,
 )
 
-from gnomad_toolbox.load_data import _get_gnomad_release, gnomad_session
+from gnomad_toolbox.load_data import (
+    _get_gnomad_release,
+    get_coverage_for_variant,
+    gnomad_session,
+)
 
 
 # TODO: Check these csq sets, the ones in the code don't match what is listed on the
@@ -122,46 +128,16 @@ def filter_by_consequence_category(
     return ht.filter(filter_expr)
 
 
-def filter_to_plofs(
-    gene_symbol: str, select_fields: bool = False, **kwargs
-) -> hl.Table:
+def get_gene_intervals(gene_symbol: str, version: str) -> List[hl.utils.Interval]:
     """
-        Filter to observed pLoF variants that we used to calculate the gene constraint metrics.
+    Get the genomic intervals for a given gene symbol.
 
-        .. note::
-
-                pLOF variants meets the following requirements:
-                - High-confidence LOFTEE variants (without any flags),
-                - Only variants in the MANE Select transcript,
-                - PASS variants that are SNVs with MAF ≤ 0.1%,
-                - Exome median depth ≥ 30 (# TODO: This is changing in v4 constraint?)
-
-    **Note: this number should match the number of observed pLOF SNVs on the gene page of gnomAD Browser.**
-
-        :param gene_symbol: Gene symbol.
-        :param select_fields: Boolean if the output should be limited to specific fields.
-        :return: Table with pLoF variants.
+    :param gene_symbol: Gene symbol.
+    :param version: Dataset version.
+    :return: List of intervals for the specified gene.
     """
-    var_version = kwargs.pop("version", gnomad_session.version)
-    var_ht = _get_gnomad_release(dataset="variant", version=var_version, **kwargs)
-
-    # Determine the version of the coverage table
-    if var_version.startswith("4."):
-        cov_ht = _get_gnomad_release(dataset="coverage", version="4.0", **kwargs)
-    elif var_version.startswith("3."):
-        cov_ht = _get_gnomad_release(dataset="coverage", version="3.0.1", **kwargs)
-    elif var_version.startswith("2."):
-        cov_ht = _get_gnomad_release(dataset="coverage", version="2.1", **kwargs)
-    else:
-        raise ValueError(
-            f"Unrecognized version: '{var_version}'. Please specify a valid version."
-        )
-
-    # Get the gene interval from gen_ht
-    gen_ht = (
-        grch37_gencode.ht() if var_version.startswith("2.") else grch38_gencode.ht()
-    )
-    interval = (
+    gen_ht = grch37_gencode.ht() if version.startswith("2.") else grch38_gencode.ht()
+    intervals = (
         gen_ht.filter(
             (gen_ht.feature == "gene")
             & (gen_ht.gene_name.lower() == gene_symbol.lower())
@@ -169,23 +145,24 @@ def filter_to_plofs(
         .select()
         .collect()
     )
-
-    if not interval:
+    if not intervals:
         raise ValueError(f"No interval found for gene: {gene_symbol}")
+    return [row["interval"] for row in intervals]
 
-    # Convert to a list of intervals
-    interval = [row["interval"] for row in interval]
-    var_ht = hl.filter_intervals(var_ht, interval)
-    cov_ht = hl.filter_intervals(cov_ht, interval)
 
-    # Filter to high-confidence LOFTEE variants
-    var_ht = filter_vep_transcript_csqs(
+def filter_hc_variants(var_ht: hl.Table, gene_symbol: str, version: str) -> hl.Table:
+    """
+    Filter variants to high-confidence LOFTEE variants with optional transcript selection.
+
+    :param var_ht: Variants Table.
+    :param gene_symbol: Gene symbol.
+    :param version: Dataset version.
+    :return: Filtered variants Hail Table.
+    """
+    return filter_vep_transcript_csqs(
         var_ht,
         synonymous=False,
-        mane_select=True if var_version.startswith("4.") else False,
-        # TODO: When this function is applied to DRD2 gene in v4.1, it will get 7 pLoF
-        #  variants instead of 8 on the browser and the 4.1 constraint table,
-        #  because one of them is not in mane select, nor in canonical transcript.
+        mane_select=version.startswith("4."),
         genes=[gene_symbol.upper()],
         match_by_gene_symbol=True,
         additional_filtering_criteria=[
@@ -194,6 +171,38 @@ def filter_to_plofs(
         ],
     )
 
+
+def filter_to_plofs(
+    gene_symbol: str, select_fields: bool = False, **kwargs
+) -> hl.Table:
+    """
+    Filter to observed pLoF variants used for gene constraint metrics.
+
+    .. note::
+
+                pLOF variants meets the following requirements:
+                - High-confidence LOFTEE variants (without any flags),
+                - Only variants in the MANE Select transcript,
+                - PASS variants that are SNVs with MAF ≤ 0.1%,
+                - Exome median depth ≥ 30 (# TODO: This is changing in v4 constraint?)
+
+    :param gene_symbol: Gene symbol.
+    :param select_fields: Whether to limit the output to specific fields.
+    :return: Table with pLoF variants.
+    """
+    var_version = kwargs.pop("version", gnomad_session.version)
+    var_ht = _get_gnomad_release(dataset="variant", version=var_version, **kwargs)
+    cov_ht = get_coverage_for_variant(var_version, **kwargs)
+
+    # Get gene intervals and filter tables
+    intervals = get_gene_intervals(gene_symbol, var_version)
+    var_ht = hl.filter_intervals(var_ht, intervals)
+    cov_ht = hl.filter_intervals(cov_ht, intervals)
+
+    # Filter to high-confidence LOFTEE variants
+    var_ht = filter_hc_variants(var_ht, gene_symbol, var_version)
+
+    # Version-specific expressions
     if var_version.startswith("2."):
         allele_type_expr = var_ht.allele_type
         cov_cut_expr = cov_ht[var_ht.locus].median
@@ -201,6 +210,7 @@ def filter_to_plofs(
         allele_type_expr = var_ht.allele_info.allele_type
         cov_cut_expr = cov_ht[var_ht.locus].median_approx
 
+    # Apply final filters
     var_ht = var_ht.filter(
         (hl.len(var_ht.filters) == 0)
         & (allele_type_expr == "snv")
@@ -208,6 +218,7 @@ def filter_to_plofs(
         & (cov_cut_expr >= 30)
     )
 
+    # Select specific fields if requested
     if select_fields:
         var_ht = var_ht.select(
             freq=var_ht.freq[0],

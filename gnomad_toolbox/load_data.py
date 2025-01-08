@@ -200,3 +200,22 @@ def get_gnomad_release(
     :return: Hail Table for requested dataset, data type, and version.
     """
     return _get_gnomad_release(dataset=dataset, data_type=data_type, version=version)
+
+
+def get_coverage_for_variant(variant_version: str, **kwargs) -> hl.Table:
+    """
+    Get the appropriate coverage table based on the provided version.
+
+    :param variant_version: Version of the variant dataset.
+    :return: Hail Table for the corresponding coverage dataset.
+    """
+    if variant_version.startswith("4."):
+        return _get_gnomad_release(dataset="coverage", version="4.0", **kwargs)
+    elif variant_version.startswith("3."):
+        return _get_gnomad_release(dataset="coverage", version="3.0.1", **kwargs)
+    elif variant_version.startswith("2."):
+        return _get_gnomad_release(dataset="coverage", version="2.1", **kwargs)
+    else:
+        raise ValueError(
+            f"Unrecognized version: '{variant_version}'. Please specify a valid version."
+        )
