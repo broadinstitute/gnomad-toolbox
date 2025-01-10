@@ -37,5 +37,4 @@ setuptools.setup(
     ],
     python_requires=">=3.9",
     install_requires=install_requires,
-    depencency_links=['git+https://github.com/broadinstitute/gnomad_methods@main#egg=gnomad_methods'],
 )

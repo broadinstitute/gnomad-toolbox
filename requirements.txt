@@ -1,3 +1,4 @@
+gnomad_methods @ git+https://github.com/broadinstitute/gnomad_methods@main
 hail
 jupyter
 jupyter_contrib_nbextensions
