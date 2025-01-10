@@ -71,6 +71,7 @@ def get_single_variant(
 
 def filter_by_intervals(
     intervals: Union[str, list[str]],
+    padding_bp: int = 0,
     **kwargs,
 ) -> hl.Table:
     """
@@ -79,6 +80,7 @@ def filter_by_intervals(
     :param intervals: Interval string or list of interval strings. The interval string
         format has to be "contig:start-end", e.g.,"1:1000-2000" (GRCh37) or
         "chr1:1000-2000" (GRCh38).
+    :param padding_bp: Number of base pairs to pad the intervals. Default is 0bp.
     :param kwargs: Arguments to pass to `_get_gnomad_release`.
     :return: Table with variants in the interval(s).
     """
@@ -86,7 +88,10 @@ def filter_by_intervals(
     ht = _get_gnomad_release(dataset="variant", **kwargs)
 
     return interval_filter(
-        ht, intervals, reference_genome=get_reference_genome(ht.locus).name
+        ht,
+        intervals,
+        padding_bp=padding_bp,
+        reference_genome=get_reference_genome(ht.locus).name,
     )
 
 
@@ -121,7 +126,7 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
     # (without padding), so we need to filter the gencode HT to only include the gene
     # of interest first.
     ht = filter_by_intervals(
-        ht, gencode_ht.filter(gencode_ht.feature == "gene").interval
+        gencode_ht.filter(gencode_ht.feature == "gene").interval, ht=ht
     )
 
     for f in feature_order:
@@ -134,7 +139,7 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
         raise ValueError(f"No intervals match the gene symbol {gene}")
 
     ht = filter_by_intervals(
-        ht, filtered_gencode_ht.interval, padding_bp=exon_padding_bp
+        filtered_gencode_ht.interval, ht=ht, padding_bp=exon_padding_bp
     )
 
     contigs = filtered_gencode_ht.aggregate(
