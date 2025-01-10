@@ -3,11 +3,10 @@
 from typing import Optional, Union
 
 import hail as hl
-from gnomad.resources.grch37.gnomad import browser_gene as browser_gene_grch37
-from gnomad.resources.grch38.gnomad import browser_gene as browser_gene_grch38
+from gnomad.utils.filtering import filter_by_intervals as interval_filter
+from gnomad.utils.filtering import filter_gencode_ht
 from gnomad.utils.parse import parse_variant
 from gnomad.utils.reference_genome import get_reference_genome
-from gnomad.utils.vep import filter_vep_transcript_csqs
 
 from gnomad_toolbox.load_data import _get_gnomad_release
 
@@ -83,95 +82,70 @@ def filter_by_intervals(
     :param kwargs: Arguments to pass to `_get_gnomad_release`.
     :return: Table with variants in the interval(s).
     """
-    # Load the Hail Table if not provided
+    # Load the Hail Table if not provided.
     ht = _get_gnomad_release(dataset="variant", **kwargs)
 
-    # Determine the reference genome build for the ht.
-    build = get_reference_genome(ht.locus).name
-
-    if isinstance(intervals, str):
-        intervals = [intervals]
-
-    if build == "GRCh38" and any([not i.startswith("chr") for i in intervals]):
-        raise ValueError("Interval must start with 'chr' for GRCh38 reference genome.")
-
-    ht = hl.filter_intervals(
-        ht, [hl.parse_locus_interval(i, reference_genome=build) for i in intervals]
+    return interval_filter(
+        ht, intervals, reference_genome=get_reference_genome(ht.locus).name
     )
-
-    return ht
 
 
 def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.Table:
     """
-    Filter variants in a gene by gene symbol.
+    Filter variants by gene symbol.
 
     .. note::
-       This is to match the browser display, which includes variants in the CDS +
-       75bp padding for protein-coding genes, and UTR/exons + 75bp padding for
-       non-protein-coding genes.
 
-    :param gene: Gene symbol.
-    :param exon_padding_bp: Number of base pairs to pad the CDS intervals. Default is 75bp.
+           This function is to match the number of variants that you will get in the
+           gnomAD browser when you search for a gene symbol. The gnomAD browser
+           filters to only variants located in or within 75 base pairs of a coding exon.
+
+    :param gene: Gencode gene symbol.
+    :param exon_padding_bp: Number of base pairs to pad the intervals. Default is 75bp.
     :param kwargs: Arguments to pass to `_get_gnomad_release`.
-    :return: Table with variants in the gene.
+    :return: Table with variants in the specified gene.
     """
-    # Load the Hail Table if not provided
+    # Load the Hail Table if not provided.
     ht = _get_gnomad_release(dataset="variant", **kwargs)
 
-    # Load gene information
-    gene_ht = (
-        browser_gene_grch37().ht()
-        if ht.locus.dtype.reference_genome.name == "GRCh37"
-        else browser_gene_grch38().ht()
+    # The gnomAD browser will display variants in CDS regions if present, otherwise UTR,
+    # and finally exons.
+    feature_order = ["CDS", "UTR", "exon"]
+    gencode_ht = filter_gencode_ht(
+        reference_genome=get_reference_genome(ht.locus).name,
+        feature=feature_order + ["gene"],
+        genes=gene,
     )
 
-    # Pre-filter to the specified gene (case-insensitive)
-    gene = gene.upper()
-    gene_ht = gene_ht.filter(gene_ht.gencode_symbol == gene)
+    # The 75bp padding only applies to variants in the specified gene interval
+    # (without padding), so we need to filter the gencode HT to only include the gene
+    # of interest first.
+    ht = filter_by_intervals(
+        ht, gencode_ht.filter(gencode_ht.feature == "gene").interval
+    )
 
-    # First get the variants in the gene region
-    ht = hl.filter_intervals(ht, hl.array(gene_ht.interval.take(1)))
+    for f in feature_order:
+        filtered_gencode_ht = gencode_ht.filter(gencode_ht.feature == f)
+        filter_count = filtered_gencode_ht.count()
+        if filter_count > 0:
+            break
 
-    # Get intervals based on feature type (CDS > UTR > Exons) with padding
-    def get_intervals(feature_type: str) -> hl.expr.ArrayExpression:
-        return hl.array(
-            gene_ht.exons.filter(lambda exon: exon.feature_type == feature_type)
-        ).map(
-            lambda exon: hl.locus_interval(
-                hl.if_else(
-                    gene_ht.interval.start.dtype.reference_genome.name == "GRCh38",
-                    "chr" + gene_ht.chrom,
-                    gene_ht.chrom,
-                ),
-                exon.start - exon_padding_bp,
-                exon.stop + exon_padding_bp,
-                reference_genome=gene_ht.interval.start.dtype.reference_genome,
-                includes_start=True,
-                includes_end=True,
-            )
+    if filter_count == 0:
+        raise ValueError(f"No intervals match the gene symbol {gene}")
+
+    ht = filter_by_intervals(
+        ht, filtered_gencode_ht.interval, padding_bp=exon_padding_bp
+    )
+
+    contigs = filtered_gencode_ht.aggregate(
+        hl.agg.collect_as_set(filtered_gencode_ht.interval.start.contig)
+    )
+    if len(contigs) > 1:
+        hl.utils.warning(
+            "The gnomAD browser excludes genes on chrY that share the same gene symbol "
+            "as chrX. For example, if you use this function to filter 'ASMT' gene, you "
+            "may get more variants than shown in the gnomAD browser because it includes "
+            "both chrX and chrY variants."
         )
-
-    cds_intervals = get_intervals("CDS")
-    utr_intervals = get_intervals("UTR")
-    exon_intervals = get_intervals("exon")
-
-    # Determine which intervals to use
-    gene_ht = gene_ht.annotate(
-        intervals=hl.if_else(
-            hl.len(cds_intervals) > 0,
-            cds_intervals,
-            hl.if_else(hl.len(utr_intervals) > 0, utr_intervals, exon_intervals),
-        )
-    )
-
-    intervals = gene_ht.intervals.take(1)[0]
-
-    ht = hl.filter_intervals(ht, intervals)
-
-    # Additional filtering (e.g., with VEP consequences)
-    ht = filter_vep_transcript_csqs(
-        ht, genes=[gene], synonymous=False, match_by_gene_symbol=True
-    )
 
     return ht
