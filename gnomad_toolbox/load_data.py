@@ -207,7 +207,7 @@ def _get_dataset(
     versions = dataset_info["versions"]
     version_info = versions.get(version)
     if version_info is None:
-        version_format = "\t".join(
+        version_format = ", ".join(
             f"{v} ({versions[v]['reference_genome']})" for v in versions
         )
         raise ValueError(
