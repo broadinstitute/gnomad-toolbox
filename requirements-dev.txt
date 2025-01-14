@@ -63,5 +63,5 @@ snowballstemmer==2.2.0
     # via pydocstyle
 tomlkit==0.13.0
     # via pylint
-virtualenv==20.26.3
+virtualenv==20.26.6
     # via pre-commit
