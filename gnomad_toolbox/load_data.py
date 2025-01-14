@@ -197,8 +197,7 @@ def _get_dataset(
             f"\treference datasets: {list(SUPPORTED_REFERENCE_DATA.keys())}"
         )
 
-    # If version or data_type are not provided, use the session information.
-    data_type = data_type or gnomad_session.data_type
+    # If version is not provided, use the session information.
     if dataset == "variant":
         version = version or gnomad_session.version
     else:
@@ -218,11 +217,13 @@ def _get_dataset(
 
     # Validate data type.
     data_types = version_info.get("data_types")
-    if data_types and data_type and data_type not in data_types:
-        raise ValueError(
-            f"Version {version} is not available for {data_type} in the {dataset} "
-            f"dataset. Available data types: {data_types}."
-        )
+    if data_types:
+        data_type = data_type or gnomad_session.data_type
+        if data_type and data_type not in data_types:
+            raise ValueError(
+                f"Version {version} is not available for {data_type} in the {dataset} "
+                f"dataset. Available data types: {data_types}."
+            )
 
     # Get the resource for the given build.
     build = version_info["reference_genome"]
