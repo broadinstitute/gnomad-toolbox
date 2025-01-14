@@ -186,10 +186,6 @@ def _get_dataset(
     if ht is not None:
         return ht
 
-    # Use session defaults if parameters are not provided.
-    data_type = data_type or gnomad_session.data_type
-    version = version or gnomad_session.version
-
     # Validate dataset.
     dataset_info = SUPPORTED_DATASETS.get(dataset)
     if dataset_info is None:
@@ -201,6 +197,13 @@ def _get_dataset(
             f"\tgnomAD datasets:{list(SUPPORTED_DATASETS.keys())}\n"
             f"\treference datasets: {list(SUPPORTED_REFERENCE_DATA.keys())}"
         )
+
+    # If version or data_type are not provided, use the session information.
+    data_type = data_type or gnomad_session.data_type
+    if dataset == "variant":
+        version = version or gnomad_session.version
+    else:
+        version = version or gnomad_session.compatible_datasets[dataset]
 
     # Validate version.
     versions = dataset_info["versions"]
@@ -308,9 +311,9 @@ def get_compatible_dataset_versions(
     # Get the dictionary of compatible versions for the given variant version or
     # the current session version.
     if variant_version is None:
-        versions = VARIANT_DATA[variant_version]["dataset_versions"]
-    else:
         versions = gnomad_session.compatible_datasets
+    else:
+        versions = VARIANT_DATA[variant_version]["dataset_versions"]
 
     # Validate dataset.
     if dataset not in versions:

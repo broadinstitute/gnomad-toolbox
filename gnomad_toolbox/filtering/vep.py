@@ -128,18 +128,18 @@ def filter_by_consequence_category(
 
 
 def get_gene_intervals(
-    gene_symbol: str, version: Optional[str] = None
+    gene_symbol: str, gencode_version: Optional[str] = None
 ) -> List[hl.utils.Interval]:
     """
     Get the GENCODE genomic intervals for a given gene symbol.
 
     :param gene_symbol: Gene symbol.
-    :param version: Optional gnomAD dataset version. If not provided, uses the gnomAD
-        session version.
+    :param gencode_version: Optional GENCODE version. If not provided, uses the gencode
+        version associated with the gnomAD session.
     :return: List of GENCODE intervals for the specified gene.
     """
     # Load the Hail Table if not provided.
-    ht = _get_dataset(dataset="gencode", version=version)
+    ht = _get_dataset(dataset="gencode", version=gencode_version)
     gene_symbol = gene_symbol.upper()
 
     intervals = filter_gencode_ht(gencode_ht=ht, feature="gene", genes=gene_symbol)
@@ -156,6 +156,7 @@ def filter_to_high_confidence_loftee(
     no_lof_flags: bool = False,
     mane_select_only: bool = False,
     canonical_only: bool = False,
+    version: Optional[str] = None,
     **kwargs,
 ) -> hl.Table:
     """
@@ -172,11 +173,14 @@ def filter_to_high_confidence_loftee(
     :return: Table with high-confidence LOFTEE variants.
     """
     # Load the Hail Table if not provided.
-    ht = _get_dataset(dataset="variant", **kwargs)
+    ht = _get_dataset(dataset="variant", version=version, **kwargs)
     gene_symbol = gene_symbol.upper() if gene_symbol else None
 
     if gene_symbol:
-        ht = hl.filter_intervals(ht, get_gene_intervals(gene_symbol))
+        gencode_version = get_compatible_dataset_versions("gencode", version)
+        ht = hl.filter_intervals(
+            ht, get_gene_intervals(gene_symbol, gencode_version=gencode_version)
+        )
 
     return filter_vep_transcript_csqs(
         ht,
@@ -248,7 +252,7 @@ def filter_to_plofs(
 
     # Get gene intervals and filter tables.
     gencode_version = get_compatible_dataset_versions("gencode", version)
-    intervals = get_gene_intervals(gene_symbol, version=gencode_version)
+    intervals = get_gene_intervals(gene_symbol, gencode_version=gencode_version)
     variant_ht = hl.filter_intervals(variant_ht, intervals)
     coverage_ht = hl.filter_intervals(coverage_ht, intervals)
 
@@ -267,7 +271,7 @@ def filter_to_plofs(
     # Apply constraint filters.
     variant_ht = variant_ht.filter(
         (hl.len(variant_ht.filters) == 0)
-        & (hl.is_snp(*variant_ht.alleles))
+        & (hl.is_snp(variant_ht.alleles[0], variant_ht.alleles[1]))
         & (variant_ht.freq[0].AF <= af_cutoff)
         & (variant_ht.exome_coverage >= cov_cutoff)
     )
@@ -276,6 +280,8 @@ def filter_to_plofs(
     variant_ht = filter_to_high_confidence_loftee(
         gene_symbol=gene_symbol,
         ht=variant_ht,
+        mane_select_only=constraint_info["mane_select"],
+        canonical_only=constraint_info["canonical"],
     )
 
     return variant_ht
