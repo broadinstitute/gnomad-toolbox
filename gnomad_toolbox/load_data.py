@@ -38,7 +38,7 @@ VARIANT_DATA = {
             "coverage": {"exomes": "4.0", "genomes": "3.0.1"},
             "all_sites_an": "4.1",
             "constraint": "4.1",
-            "pext": "v7",
+            "pext": "v10",
             "browser": "4.1",
         },
     },
