@@ -93,7 +93,7 @@ SUPPORTED_DATASETS = {
     "constraint": {"resource": "constraint", "versions": CONSTRAINT_DATA},
     "liftover": {"resource": "liftover", "versions": LIFTOVER_DATA},
     "pext": {"resource": "pext", "versions": PEXT_DATA},
-    "browser": {"resource": "browser", "versions": BROWSER_DATA},
+    "browser": {"resource": "browser_variant", "versions": BROWSER_DATA},
 }
 SUPPORTED_REFERENCE_DATA = {
     "vep": {
