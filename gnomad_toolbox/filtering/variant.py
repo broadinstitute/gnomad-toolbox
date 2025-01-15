@@ -71,6 +71,7 @@ def get_single_variant(
 
 def filter_by_intervals(
     intervals: Union[str, list[str]],
+    padding_bp: int = 0,
     **kwargs,
 ) -> hl.Table:
     """
@@ -79,15 +80,17 @@ def filter_by_intervals(
     :param intervals: Interval string or list of interval strings. The interval string
         format has to be "contig:start-end", e.g.,"1:1000-2000" (GRCh37) or
         "chr1:1000-2000" (GRCh38).
+    :param padding_bp: Number of base pairs to pad the intervals. Default is 0bp.
     :param kwargs: Arguments to pass to `_get_dataset`.
     :return: Table with variants in the interval(s).
     """
-    # Load the Hail Table if not provided
+    # Load the Hail Table if not provided.
     ht = _get_dataset(dataset="variant", **kwargs)
 
     return interval_filter(
         ht,
         intervals,
+        padding_bp=padding_bp,
         reference_genome=get_reference_genome(ht.locus).name,
     )
 
