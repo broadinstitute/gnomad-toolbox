@@ -150,7 +150,9 @@ class GnomADSession:
 
         # Validate version.
         if version not in VARIANT_DATA:
-            raise ValueError(f"Version {version} is not a supported gnomAD version in the Toolbox.")
+            raise ValueError(
+                f"Version {version} is not a supported gnomAD version in the Toolbox."
+            )
 
         # Validate data type for the version.
         version_info = VARIANT_DATA[version]
@@ -188,7 +190,9 @@ def _get_dataset(
         return ht
 
     # Validate dataset.
-    dataset_info = SUPPORTED_DATASETS.get(dataset) or SUPPORTED_REFERENCE_DATA.get(dataset)
+    dataset_info = SUPPORTED_DATASETS.get(dataset) or SUPPORTED_REFERENCE_DATA.get(
+        dataset
+    )
 
     if dataset_info is None:
         raise ValueError(
@@ -257,32 +261,30 @@ def get_gnomad_release(
         :widths: auto
 
         +--------------+--------------+---------+------------------------------+
-        | Dataset      | Genome Build | Version | Data Types                   |
+        | Genome Build | Dataset      | Version | Data Types                   |
         +==============+==============+=========+==============================+
-        | variant      | GRCh37       | 2.1.1   | exomes, genomes              |
+        | GRCh37       | variant      | 2.1.1   | exomes, genomes              |
         |              +--------------+---------+------------------------------+
-        |              | GRCh38       | 4.1     | exomes, genomes, joint       |
-        +--------------+--------------+---------+------------------------------+
-        | coverage     | GRCh37       | 2.1     | exomes, genomes              |
+        |              | coverage     | 2.1     | exomes, genomes              |
         |              +--------------+---------+------------------------------+
-        |              | GRCh38       | 3.0.1   | genomes                      |
-        |              |              +---------+------------------------------+
-        |              |              | 4.0     | exomes                       |
-        +--------------+--------------+---------+------------------------------+
-        | all_sites_an | GRCh38       | 4.1     | exomes, genomes              |
-        +--------------+--------------+---------+------------------------------+
-        | constraint   | GRCh37       | 2.1.1   | N/A                          |
+        |              | constraint   | 2.1.1   | N/A                          |
         |              +--------------+---------+------------------------------+
-        |              | GRCh38       | 4.1     | N/A                          |
-        +--------------+--------------+---------+------------------------------+
-        | liftover     | GRCh37       | 2.1.1   | exomes, genomes              |
-        +--------------+--------------+---------+------------------------------+
-        | pext         | GRCh37       | v7      | base_level, annotation_level |
+        |              + pext         | v7      | base_level, annotation_level |
         |              +--------------+---------+------------------------------+
-        |              | GRCh38       | v10     | base_level, annotation_level |
+        |              | liftover     | 2.1.1   | exomes, genomes              |
         +--------------+--------------+---------+------------------------------+
-        | browser      | GRCh38       | 4.1     | N/A (joint, but doesn't need |
+        | GRCh38       | variant      | 4.1     | exomes, genomes, joint       |
+        |              +--------------+---------+------------------------------+
+        |              | all_sites_an | 4.1     | exomes, genomes              |
+        |              +--------------+---------+------------------------------+
+        |              | browser      | 4.1     | N/A (joint, but doesn't need |
         |              |              |         | to be specified)             |
+        |              +--------------+---------+------------------------------+
+        |              | coverage     | 3.0.1   | genomes                      |
+        |              +--------------+---------+------------------------------+
+        |              | constraint   | 4.1     | N/A                          |
+        |              +--------------+---------+------------------------------+
+        |              | pext         | v10     | base_level, annotation_level |
         +--------------+--------------+---------+------------------------------+
 
     :param dataset: Dataset type. One of "variant", "coverage", "all_sites_an",
