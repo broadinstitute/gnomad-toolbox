@@ -8,7 +8,7 @@ from gnomad.utils.filtering import filter_gencode_ht
 from gnomad.utils.parse import parse_variant
 from gnomad.utils.reference_genome import get_reference_genome
 
-from gnomad_toolbox.load_data import _get_gnomad_release
+from gnomad_toolbox.load_data import _get_dataset
 
 
 def get_single_variant(
@@ -35,7 +35,7 @@ def get_single_variant(
     :param position: Variant position. Required if `variant` is not provided.
     :param ref: Reference allele. Required if `variant` is not provided.
     :param alt: Alternate allele. Required if `variant` is not provided.
-    :param kwargs: Additional arguments to pass to `_get_gnomad_release`.
+    :param kwargs: Additional arguments to pass to `_get_dataset`.
     :return: Table with the single variant.
     """
     if not variant and not all([contig, position, ref, alt]):
@@ -45,7 +45,7 @@ def get_single_variant(
         )
 
     # Load the Hail Table if not provided
-    ht = _get_gnomad_release(dataset="variant", **kwargs)
+    ht = _get_dataset(dataset="variant", **kwargs)
 
     # Determine the reference genome build for the ht.
     build = get_reference_genome(ht.locus).name
@@ -71,7 +71,6 @@ def get_single_variant(
 
 def filter_by_intervals(
     intervals: Union[str, list[str]],
-    padding_bp: int = 0,
     **kwargs,
 ) -> hl.Table:
     """
@@ -80,17 +79,15 @@ def filter_by_intervals(
     :param intervals: Interval string or list of interval strings. The interval string
         format has to be "contig:start-end", e.g.,"1:1000-2000" (GRCh37) or
         "chr1:1000-2000" (GRCh38).
-    :param padding_bp: Number of base pairs to pad the intervals. Default is 0bp.
-    :param kwargs: Arguments to pass to `_get_gnomad_release`.
+    :param kwargs: Arguments to pass to `_get_dataset`.
     :return: Table with variants in the interval(s).
     """
-    # Load the Hail Table if not provided.
-    ht = _get_gnomad_release(dataset="variant", **kwargs)
+    # Load the Hail Table if not provided
+    ht = _get_dataset(dataset="variant", **kwargs)
 
     return interval_filter(
         ht,
         intervals,
-        padding_bp=padding_bp,
         reference_genome=get_reference_genome(ht.locus).name,
     )
 
@@ -108,11 +105,11 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
 
     :param gene: Gencode gene symbol.
     :param exon_padding_bp: Number of base pairs to pad the intervals. Default is 75bp.
-    :param kwargs: Arguments to pass to `_get_gnomad_release`.
+    :param kwargs: Arguments to pass to `_get_dataset`.
     :return: Table with variants in the specified gene.
     """
     # Load the Hail Table if not provided.
-    ht = _get_gnomad_release(dataset="variant", **kwargs)
+    ht = _get_dataset(dataset="variant", **kwargs)
 
     # The gnomAD browser will display variants in CDS regions if present, otherwise UTR,
     # and finally exons.

@@ -1,9 +1,16 @@
 """Functions to filter gnomAD sites HT by VEP annotations."""
 
-import hail as hl
-from gnomad.utils.vep import LOF_CSQ_SET, filter_vep_transcript_csqs_expr
+from typing import List, Optional
 
-from gnomad_toolbox.load_data import _get_gnomad_release
+import hail as hl
+from gnomad.utils.filtering import filter_gencode_ht
+from gnomad.utils.vep import (
+    LOF_CSQ_SET,
+    filter_vep_transcript_csqs,
+    filter_vep_transcript_csqs_expr,
+)
+
+from gnomad_toolbox.load_data import _get_dataset, get_compatible_dataset_versions
 
 
 # TODO: Check these csq sets, the ones in the code don't match what is listed on the
@@ -76,7 +83,7 @@ def filter_by_consequence_category(
     :param synonymous: Whether to include synonymous variants.
     :param other: Whether to include other variants.
     :param pass_filters: Boolean if the variants pass the filters.
-    :param kwargs: Arguments to pass to _get_gnomad_release.
+    :param kwargs: Arguments to pass to `_get_dataset`.
     :return: Table with variants with the specified consequences.
     """
     if not any([plof, missense, synonymous, other]):
@@ -85,7 +92,7 @@ def filter_by_consequence_category(
         )
 
     # Load the Hail Table if not provided
-    ht = _get_gnomad_release(dataset="variant", **kwargs)
+    ht = _get_dataset(dataset="variant", **kwargs)
 
     lof_csqs = list(LOF_CSQ_SET)
     missense_csqs = ["missense_variant", "inframe_insertion", "inframe_deletion"]
@@ -116,23 +123,68 @@ def filter_by_consequence_category(
     return ht.filter(filter_expr)
 
 
-# TODO: The following was in one of the notebooks, and I think we should add a wrapper
-#  around this function to make it much simpler instead of using it in the notebook.
+def get_gene_intervals(
+    gene_symbol: str, gencode_version: Optional[str] = None
+) -> List[hl.utils.Interval]:
+    """
+    Get the GENCODE genomic intervals for a given gene symbol.
 
-# Filter to LOFTEE high-confidence variants for certain genes
+    :param gene_symbol: Gene symbol.
+    :param gencode_version: Optional GENCODE version. If not provided, uses the gencode
+        version associated with the gnomAD session.
+    :return: List of GENCODE intervals for the specified gene.
+    """
+    # Load the Hail Table if not provided.
+    ht = _get_dataset(dataset="gencode", version=gencode_version)
+    gene_symbol = gene_symbol.upper()
 
-# In this example, we are filtering to variants in ASH1L that are LOFTEE high-confidence
-# (with no flags) in the MANE select transcript.
+    intervals = filter_gencode_ht(gencode_ht=ht, feature="gene", genes=gene_symbol)
+    intervals = intervals.interval.collect()
 
-# from gnomad.utils.vep import filter_vep_transcript_csqs
-# ht = get_gnomad_release(data_type='exomes', version='4.1')
-# ht = filter_vep_transcript_csqs(
-#    ht,
-#    synonymous=False,
-#    mane_select=True,
-#    genes=["ASH1L"],
-#    match_by_gene_symbol=True,
-#    additional_filtering_criteria=[lambda x: (x.lof == "HC") & hl.is_missing(x.lof_flags)],
-# )
-# ht.show()
-# ht.count()
+    if not intervals:
+        raise ValueError(f"No interval found for gene: {gene_symbol}")
+
+    return intervals
+
+
+def filter_to_high_confidence_loftee(
+    gene_symbol: Optional[str] = None,
+    no_lof_flags: bool = False,
+    mane_select_only: bool = False,
+    canonical_only: bool = False,
+    version: Optional[str] = None,
+    **kwargs,
+) -> hl.Table:
+    """
+    Filter gnomAD variants to high-confidence LOFTEE variants for a gene.
+
+    :param gene_symbol: Optional gene symbol to filter by.
+    :param no_lof_flags: Whether to exclude variants with LOFTEE flags. Default is
+        False.
+    :param mane_select_only: Whether to include only MANE Select transcripts. Default
+        is False.
+    :param canonical_only: Whether to include only canonical transcripts. Default is
+        False.
+    :param kwargs: Additional arguments to pass to `_get_dataset`.
+    :return: Table with high-confidence LOFTEE variants.
+    """
+    # Load the Hail Table if not provided.
+    ht = _get_dataset(dataset="variant", version=version, **kwargs)
+    gene_symbol = gene_symbol.upper() if gene_symbol else None
+
+    if gene_symbol:
+        gencode_version = get_compatible_dataset_versions("gencode", version)
+        ht = hl.filter_intervals(
+            ht, get_gene_intervals(gene_symbol, gencode_version=gencode_version)
+        )
+
+    return filter_vep_transcript_csqs(
+        ht,
+        synonymous=False,
+        canonical=canonical_only,
+        mane_select=mane_select_only,
+        genes=[gene_symbol],
+        match_by_gene_symbol=True,
+        loftee_labels=["HC"],
+        no_lof_flags=no_lof_flags,
+    )

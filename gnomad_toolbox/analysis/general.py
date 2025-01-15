@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import hail as hl
 from gnomad.assessment.summary_stats import freq_bin_expr
 
-from gnomad_toolbox.load_data import _get_gnomad_release
+from gnomad_toolbox.load_data import _get_dataset
 
 
 def get_variant_count_by_freq_bin(
@@ -33,12 +33,12 @@ def get_variant_count_by_freq_bin(
     :param singletons: Include singletons.
     :param doubletons: Include doubletons.
     :param pass_only: Include only PASS variants.
-    :param kwargs: Keyword arguments to pass to _get_gnomad_release. Includes
-        'ht', 'data_type', and 'version'.
+    :param kwargs: Keyword arguments to pass to `_get_dataset`. Includes 'ht',
+        'data_type', and 'version'.
     :return: Dictionary with counts.
     """
     # Load the Hail Table if not provided
-    ht = _get_gnomad_release(dataset="variant", **kwargs)
+    ht = _get_dataset(dataset="variant", **kwargs)
 
     # Filter to PASS variants.
     if pass_only:
