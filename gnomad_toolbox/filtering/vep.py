@@ -205,16 +205,13 @@ def filter_to_plofs(
     """
     Filter to observed pLoF variants used for gene constraint metrics.
 
-    .. note::
+    The pLOF variant count displayed on the browser meets the following requirements:
 
-        pLOF variants meets the following requirements:
-
-            - PASS variant QC
-            - SNV
-            - Allele frequency ≤ 0.1%
-            - High-confidence LOFTEE in the Canonical or MANE Select transcript (depends
-              on the version)
-            - ≥ a specified coverage threshold (depends on the version)
+        - PASS variant QC
+        - SNV
+        - Allele frequency ≤ 0.1%
+        - High-confidence LOFTEE in the MANE Select or Canonical transcript
+        - ≥ a specified coverage threshold (depends on the version)
 
     :param gene_symbol: Gene symbol.
     :param version: Optional gnomAD dataset version. If not provided, uses the gnomAD
@@ -280,8 +277,7 @@ def filter_to_plofs(
     variant_ht = filter_to_high_confidence_loftee(
         gene_symbol=gene_symbol,
         ht=variant_ht,
-        mane_select_only=constraint_info["mane_select"],
-        canonical_only=constraint_info["canonical"],
+        canonical_only=True,
     )
 
     return variant_ht
