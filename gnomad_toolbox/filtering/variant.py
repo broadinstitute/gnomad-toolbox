@@ -103,7 +103,7 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
 
            This function is to match the number of variants that you will get in the
            gnomAD browser when you search for a gene symbol. The gnomAD browser
-           filters to only variants located in or within 75 base pairs of a coding exon.
+           filters to only variants located in or within 75 base pairs of CDS or non-coding exons of a gene.
 
     :param gene: Gencode gene symbol.
     :param exon_padding_bp: Number of base pairs to pad the intervals. Default is 75bp.
