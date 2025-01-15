@@ -3,11 +3,12 @@
 from typing import Optional, Union
 
 import hail as hl
+from gnomad.utils.filtering import filter_by_intervals as interval_filter
 from gnomad.utils.filtering import filter_to_gencode_cds
 from gnomad.utils.parse import parse_variant
 from gnomad.utils.reference_genome import get_reference_genome
 
-from gnomad_toolbox.load_data import _get_gnomad_release
+from gnomad_toolbox.load_data import _get_dataset
 
 
 def get_single_variant(
@@ -34,7 +35,7 @@ def get_single_variant(
     :param position: Variant position. Required if `variant` is not provided.
     :param ref: Reference allele. Required if `variant` is not provided.
     :param alt: Alternate allele. Required if `variant` is not provided.
-    :param kwargs: Additional arguments to pass to `_get_gnomad_release`.
+    :param kwargs: Additional arguments to pass to `_get_dataset`.
     :return: Table with the single variant.
     """
     if not variant and not all([contig, position, ref, alt]):
@@ -44,7 +45,7 @@ def get_single_variant(
         )
 
     # Load the Hail Table if not provided
-    ht = _get_gnomad_release(dataset="variant", **kwargs)
+    ht = _get_dataset(dataset="variant", **kwargs)
 
     # Determine the reference genome build for the ht.
     build = get_reference_genome(ht.locus).name
@@ -78,26 +79,17 @@ def filter_by_intervals(
     :param intervals: Interval string or list of interval strings. The interval string
         format has to be "contig:start-end", e.g.,"1:1000-2000" (GRCh37) or
         "chr1:1000-2000" (GRCh38).
-    :param kwargs: Arguments to pass to `_get_gnomad_release`.
+    :param kwargs: Arguments to pass to `_get_dataset`.
     :return: Table with variants in the interval(s).
     """
     # Load the Hail Table if not provided
-    ht = _get_gnomad_release(dataset="variant", **kwargs)
+    ht = _get_dataset(dataset="variant", **kwargs)
 
-    # Determine the reference genome build for the ht.
-    build = get_reference_genome(ht.locus).name
-
-    if isinstance(intervals, str):
-        intervals = [intervals]
-
-    if build == "GRCh38" and any([not i.startswith("chr") for i in intervals]):
-        raise ValueError("Interval must start with 'chr' for GRCh38 reference genome.")
-
-    ht = hl.filter_intervals(
-        ht, [hl.parse_locus_interval(i, reference_genome=build) for i in intervals]
+    return interval_filter(
+        ht,
+        intervals,
+        reference_genome=get_reference_genome(ht.locus).name,
     )
-
-    return ht
 
 
 # TODO: Add a pre-processing step to filter out these genes on chrY to
@@ -120,11 +112,11 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
     :param gene: Gene symbol.
     :param exon_padding_bp: Number of base pairs to pad the CDS intervals. Default is
         75bp.
-    :param kwargs: Arguments to pass to `_get_gnomad_release`.
+    :param kwargs: Arguments to pass to `_get_dataset`.
     :return: Table with variants in the gene.
     """
     # Load the Hail Table if not provided
-    ht = _get_gnomad_release(dataset="variant", **kwargs)
+    ht = _get_dataset(dataset="variant", **kwargs)
     ht = filter_to_gencode_cds(ht, genes=gene, padding_bp=exon_padding_bp)
 
     return ht

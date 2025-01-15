@@ -1,10 +1,9 @@
 """Functions to filter gnomAD sites HT by VEP annotations."""
 
-from typing import List
+from typing import List, Optional
 
 import hail as hl
-from gnomad.resources.grch37.reference_data import gencode as grch37_gencode
-from gnomad.resources.grch38.reference_data import gencode as grch38_gencode
+from gnomad.utils.filtering import filter_gencode_ht
 from gnomad.utils.vep import (
     LOF_CSQ_SET,
     filter_vep_transcript_csqs,
@@ -12,9 +11,9 @@ from gnomad.utils.vep import (
 )
 
 from gnomad_toolbox.load_data import (
-    _get_gnomad_release,
-    get_coverage_for_variant,
-    gnomad_session,
+    CONSTRAINT_DATA,
+    _get_dataset,
+    get_compatible_dataset_versions,
 )
 
 
@@ -88,7 +87,7 @@ def filter_by_consequence_category(
     :param synonymous: Whether to include synonymous variants.
     :param other: Whether to include other variants.
     :param pass_filters: Boolean if the variants pass the filters.
-    :param kwargs: Arguments to pass to _get_gnomad_release.
+    :param kwargs: Arguments to pass to `_get_dataset`.
     :return: Table with variants with the specified consequences.
     """
     if not any([plof, missense, synonymous, other]):
@@ -97,7 +96,7 @@ def filter_by_consequence_category(
         )
 
     # Load the Hail Table if not provided
-    ht = _get_gnomad_release(dataset="variant", **kwargs)
+    ht = _get_dataset(dataset="variant", **kwargs)
 
     lof_csqs = list(LOF_CSQ_SET)
     missense_csqs = ["missense_variant", "inframe_insertion", "inframe_deletion"]
@@ -128,102 +127,157 @@ def filter_by_consequence_category(
     return ht.filter(filter_expr)
 
 
-def get_gene_intervals(gene_symbol: str, version: str) -> List[hl.utils.Interval]:
+def get_gene_intervals(
+    gene_symbol: str, gencode_version: Optional[str] = None
+) -> List[hl.utils.Interval]:
     """
-    Get the genomic intervals for a given gene symbol.
+    Get the GENCODE genomic intervals for a given gene symbol.
 
     :param gene_symbol: Gene symbol.
-    :param version: Dataset version.
-    :return: List of intervals for the specified gene.
+    :param gencode_version: Optional GENCODE version. If not provided, uses the gencode
+        version associated with the gnomAD session.
+    :return: List of GENCODE intervals for the specified gene.
     """
-    gen_ht = grch37_gencode.ht() if version.startswith("2.") else grch38_gencode.ht()
-    intervals = (
-        gen_ht.filter(
-            (gen_ht.feature == "gene")
-            & (gen_ht.gene_name.lower() == gene_symbol.lower())
-        )
-        .select()
-        .collect()
-    )
+    # Load the Hail Table if not provided.
+    ht = _get_dataset(dataset="gencode", version=gencode_version)
+    gene_symbol = gene_symbol.upper()
+
+    intervals = filter_gencode_ht(gencode_ht=ht, feature="gene", genes=gene_symbol)
+    intervals = intervals.interval.collect()
+
     if not intervals:
         raise ValueError(f"No interval found for gene: {gene_symbol}")
-    return [row["interval"] for row in intervals]
+
+    return intervals
 
 
-def filter_hc_variants(var_ht: hl.Table, gene_symbol: str, version: str) -> hl.Table:
+def filter_to_high_confidence_loftee(
+    gene_symbol: Optional[str] = None,
+    no_lof_flags: bool = False,
+    mane_select_only: bool = False,
+    canonical_only: bool = False,
+    version: Optional[str] = None,
+    **kwargs,
+) -> hl.Table:
     """
-    Filter variants to high-confidence LOFTEE variants with optional transcript selection.
+    Filter gnomAD variants to high-confidence LOFTEE variants for a gene.
 
-    :param var_ht: Variants Table.
-    :param gene_symbol: Gene symbol.
-    :param version: Dataset version.
-    :return: Filtered variants Hail Table.
+    :param gene_symbol: Optional gene symbol to filter by.
+    :param no_lof_flags: Whether to exclude variants with LOFTEE flags. Default is
+        False.
+    :param mane_select_only: Whether to include only MANE Select transcripts. Default
+        is False.
+    :param canonical_only: Whether to include only canonical transcripts. Default is
+        False.
+    :param kwargs: Additional arguments to pass to `_get_dataset`.
+    :return: Table with high-confidence LOFTEE variants.
     """
+    # Load the Hail Table if not provided.
+    ht = _get_dataset(dataset="variant", version=version, **kwargs)
+    gene_symbol = gene_symbol.upper() if gene_symbol else None
+
+    if gene_symbol:
+        gencode_version = get_compatible_dataset_versions("gencode", version)
+        ht = hl.filter_intervals(
+            ht, get_gene_intervals(gene_symbol, gencode_version=gencode_version)
+        )
+
     return filter_vep_transcript_csqs(
-        var_ht,
+        ht,
         synonymous=False,
-        mane_select=version.startswith("4."),
-        genes=[gene_symbol.upper()],
+        canonical=canonical_only,
+        mane_select=mane_select_only,
+        genes=[gene_symbol],
         match_by_gene_symbol=True,
-        additional_filtering_criteria=[
-            lambda x: (x.lof == "HC")
-            & (hl.is_missing(x.lof_flags) | (x.lof_flags == ""))
-        ],
+        loftee_labels=["HC"],
+        no_lof_flags=no_lof_flags,
     )
 
 
+# TODO: Let's move this function to constraint.py and change the name to something more
+#  descriptive, like maybe get_observed_plofs_for_gene_constraint.
 def filter_to_plofs(
-    gene_symbol: str, select_fields: bool = False, **kwargs
+    gene_symbol: str,
+    version: str = None,
+    variant_ht: hl.Table = None,
+    coverage_ht: hl.Table = None,
 ) -> hl.Table:
     """
     Filter to observed pLoF variants used for gene constraint metrics.
 
-    .. note::
+    The pLOF variant count displayed on the browser meets the following requirements:
 
-                pLOF variants meets the following requirements:
-                - High-confidence LOFTEE variants (without any flags),
-                - Only variants in the MANE Select transcript,
-                - PASS variants that are SNVs with MAF ≤ 0.1%,
-                - Exome median depth ≥ 30 (# TODO: This is changing in v4 constraint?)
+        - PASS variant QC
+        - SNV
+        - Allele frequency ≤ 0.1%
+        - High-confidence LOFTEE in the MANE Select or Canonical transcript
+        - ≥ a specified coverage threshold (depends on the version)
 
     :param gene_symbol: Gene symbol.
-    :param select_fields: Whether to limit the output to specific fields.
+    :param version: Optional gnomAD dataset version. If not provided, uses the gnomAD
+        session version.
+    :param variant_ht: Optional Hail Table with variants. If not provided, uses the
+        exome variant Table for the gnomAD session version.
+    :param coverage_ht: Optional Hail Table with coverage data. If not provided, uses
+        the exome coverage Table for the gnomAD session version.
     :return: Table with pLoF variants.
     """
-    var_version = kwargs.pop("version", gnomad_session.version)
-    var_ht = _get_gnomad_release(dataset="variant", version=var_version, **kwargs)
-    cov_ht = get_coverage_for_variant(var_version, **kwargs)
+    if variant_ht is not None and coverage_ht is None:
+        raise ValueError("Variant Hail Table provided without coverage Hail Table.")
 
-    # Get gene intervals and filter tables
-    intervals = get_gene_intervals(gene_symbol, var_version)
-    var_ht = hl.filter_intervals(var_ht, intervals)
-    cov_ht = hl.filter_intervals(cov_ht, intervals)
+    if coverage_ht is not None and variant_ht is None:
+        raise ValueError("Coverage Hail Table provided without variant Hail Table.")
 
-    # Filter to high-confidence LOFTEE variants
-    var_ht = filter_hc_variants(var_ht, gene_symbol, var_version)
-
-    # Version-specific expressions
-    if var_version.startswith("2."):
-        allele_type_expr = var_ht.allele_type
-        cov_cut_expr = cov_ht[var_ht.locus].median
-    else:
-        allele_type_expr = var_ht.allele_info.allele_type
-        cov_cut_expr = cov_ht[var_ht.locus].median_approx
-
-    # Apply final filters
-    var_ht = var_ht.filter(
-        (hl.len(var_ht.filters) == 0)
-        & (allele_type_expr == "snv")
-        & (var_ht.freq[0].AF <= 0.001)
-        & (cov_cut_expr >= 30)
+    # Load the variant exomes Hail Table if not provided.
+    variant_ht = _get_dataset(
+        dataset="variant",
+        ht=variant_ht,
+        data_type="exomes",
+        version=version,
     )
 
-    # Select specific fields if requested
-    if select_fields:
-        var_ht = var_ht.select(
-            freq=var_ht.freq[0],
-            csq=var_ht.vep.transcript_consequences[0].consequence_terms,
-            coverage=cov_ht[var_ht.locus],
-        )
+    # Determine the coverage version compatible with the variant version.
+    coverage_version = get_compatible_dataset_versions("coverage", version, "exomes")
 
-    return var_ht
+    # Load the coverage Hail Table if not provided.
+    coverage_ht = _get_dataset(
+        dataset="coverage",
+        ht=coverage_ht,
+        data_type="exomes",
+        version=coverage_version,
+    )
+
+    # Get gene intervals and filter tables.
+    gencode_version = get_compatible_dataset_versions("gencode", version)
+    intervals = get_gene_intervals(gene_symbol, gencode_version=gencode_version)
+    variant_ht = hl.filter_intervals(variant_ht, intervals)
+    coverage_ht = hl.filter_intervals(coverage_ht, intervals)
+
+    # Determine constraint filters.
+    constraint_version = get_compatible_dataset_versions("constraint", version)
+    constraint_info = CONSTRAINT_DATA[constraint_version]
+    cov_field = constraint_info["exome_coverage_field"]
+    cov_cutoff = constraint_info["exome_coverage_cutoff"]
+    af_cutoff = constraint_info["af_cutoff"]
+
+    # Annotate the exome coverage.
+    variant_ht = variant_ht.annotate(
+        exome_coverage=coverage_ht[variant_ht.locus][cov_field]
+    )
+
+    # Apply constraint filters.
+    variant_ht = variant_ht.filter(
+        (hl.len(variant_ht.filters) == 0)
+        & (hl.is_snp(variant_ht.alleles[0], variant_ht.alleles[1]))
+        & (variant_ht.freq[0].AF <= af_cutoff)
+        & (variant_ht.exome_coverage >= cov_cutoff)
+    )
+
+    # Filter to high-confidence LOFTEE variants.
+    variant_ht = filter_to_high_confidence_loftee(
+        gene_symbol=gene_symbol,
+        ht=variant_ht,
+        canonical_only=True,
+    )
+
+    return variant_ht

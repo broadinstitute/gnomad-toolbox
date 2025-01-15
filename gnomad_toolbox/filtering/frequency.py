@@ -6,7 +6,7 @@ import hail as hl
 from gnomad.utils.filtering import filter_arrays_by_meta
 
 from gnomad_toolbox.filtering.variant import get_single_variant
-from gnomad_toolbox.load_data import _get_gnomad_release
+from gnomad_toolbox.load_data import _get_dataset
 
 
 def get_ancestry_callstats(
@@ -19,11 +19,11 @@ def get_ancestry_callstats(
     :param gen_ancs: Genetic ancestry group(s) (e.g., 'afr', 'amr', 'asj', 'eas',
         'fin', 'nfe', 'oth', 'sas'). Can be a single ancestry group or a list of
         ancestry groups.
-    :param kwargs: Keyword arguments to pass to _get_gnomad_release.
+    :param kwargs: Keyword arguments to pass to _get_dataset.
     :return: Table with callstats for the given ancestry groups and variant.
     """
     # Load the Hail Table if not provided
-    ht = _get_gnomad_release(dataset="variant", **kwargs)
+    ht = _get_dataset(dataset="variant", **kwargs)
 
     # Check if gen_ancs is a single ancestry group.
     one_anc = isinstance(gen_ancs, str)
