@@ -150,7 +150,7 @@ class GnomADSession:
 
         # Validate version.
         if version not in VARIANT_DATA:
-            raise ValueError(f"Version {version} is not a supported gnomAD version.")
+            raise ValueError(f"Version {version} is not a supported gnomAD version in the Toolbox.")
 
         # Validate data type for the version.
         version_info = VARIANT_DATA[version]
@@ -188,9 +188,7 @@ def _get_dataset(
         return ht
 
     # Validate dataset.
-    dataset_info = SUPPORTED_DATASETS.get(dataset)
-    if dataset_info is None:
-        dataset_info = SUPPORTED_REFERENCE_DATA.get(dataset)
+    dataset_info = SUPPORTED_DATASETS.get(dataset) or SUPPORTED_REFERENCE_DATA.get(dataset)
 
     if dataset_info is None:
         raise ValueError(
