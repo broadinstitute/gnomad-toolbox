@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 import hail as hl
 from gnomad.utils.filtering import filter_by_intervals as interval_filter
-from gnomad.utils.filtering import filter_to_gencode_cds
+from gnomad.utils.filtering import filter_gencode_ht
 from gnomad.utils.parse import parse_variant
 from gnomad.utils.reference_genome import get_reference_genome
 
@@ -92,31 +92,52 @@ def filter_by_intervals(
     )
 
 
-# TODO: Add a pre-processing step to filter out these genes on chrY to
-# match the gnomAD browser.
 def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.Table:
     """
-    Filter variants in a gene.
+    Filter variants by gene symbol.
 
     .. note::
 
            This function is to match the number of variants that you will get in the
-           gnomAD browser, which only focus on variants in "CDS" regions plus
-           75bp (default of `exon_padding_bp`) up- and downstream.
+           gnomAD browser when you search for a gene symbol. The gnomAD browser
+           filters to only variants located in or within 75 base pairs of CDS or
+           non-coding exons of a gene.
 
-           However, gnomAD browser used a preprocessed Gencode file which excluded
-           46 genes on chrY that share the same gene id as chrX. For example,
-           if you use this function to filter "ASMT" gene, you will get more variants
-           than shown in the gnomAD browser.
-
-    :param gene: Gene symbol.
-    :param exon_padding_bp: Number of base pairs to pad the CDS intervals. Default is
-        75bp.
+    :param gene: Gencode gene symbol.
+    :param exon_padding_bp: Number of base pairs to pad the intervals. Default is 75bp.
     :param kwargs: Arguments to pass to `_get_dataset`.
-    :return: Table with variants in the gene.
+    :return: Table with variants in the specified gene.
     """
-    # Load the Hail Table if not provided
+    # Load the Hail Table if not provided.
     ht = _get_dataset(dataset="variant", **kwargs)
-    ht = filter_to_gencode_cds(ht, genes=gene, padding_bp=exon_padding_bp)
+
+    # The gnomAD browser will display variants in CDS regions if present, otherwise UTR,
+    # and finally exons.
+    feature_order = ["CDS", "UTR", "exon"]
+    gencode_ht = filter_gencode_ht(
+        reference_genome=get_reference_genome(ht.locus).name,
+        feature=feature_order + ["gene"],
+        genes=gene,
+    )
+
+    # The 75bp padding only applies to variants in the specified gene interval
+    # (without padding), so we need to filter the gencode HT to only include the gene
+    # of interest first.
+    ht = filter_by_intervals(
+        gencode_ht.filter(gencode_ht.feature == "gene").interval, ht=ht
+    )
+
+    for f in feature_order:
+        filtered_gencode_ht = gencode_ht.filter(gencode_ht.feature == f)
+        filter_count = filtered_gencode_ht.count()
+        if filter_count > 0:
+            break
+
+    if filter_count == 0:
+        raise ValueError(f"No intervals match the gene symbol {gene}")
+
+    ht = filter_by_intervals(
+        filtered_gencode_ht.interval, ht=ht, padding_bp=exon_padding_bp
+    )
 
     return ht
