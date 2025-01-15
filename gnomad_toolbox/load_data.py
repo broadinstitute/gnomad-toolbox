@@ -69,16 +69,12 @@ CONSTRAINT_DATA = {
         "exome_coverage_field": "median",
         "exome_coverage_cutoff": 30,
         "af_cutoff": 0.001,
-        "mane_select": False,
-        "canonical": True,
     },
     "4.1": {
         "reference_genome": "GRCh38",
         "exome_coverage_field": "median_approx",
         "exome_coverage_cutoff": 30,
         "af_cutoff": 0.001,
-        "mane_select": True,
-        "canonical": False,
     },
 }
 LIFTOVER_DATA = {
