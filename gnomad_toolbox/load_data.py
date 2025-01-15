@@ -13,6 +13,12 @@ RESOURCES_BY_BUILD = {
     "GRCh37": grch37_res,
     "GRCh38": grch38_res,
 }
+# In the toolbox, for each dataset, we only support loading the most recent versions
+# for each reference genome build (GRCh37 and GRCh38) and data type (exomes, genomes,
+# joint). Older versions are not supported because they are less complete datasets, and
+# some may have errors that have been fixed in newer versions. If other versions are
+# actually needed, they can be loaded using `gnomad_methods` or directly loading the
+# Table with hl.read_table.
 VARIANT_DATA = {
     "2.1.1": {
         "reference_genome": "GRCh37",
