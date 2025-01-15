@@ -103,7 +103,8 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
 
            This function is to match the number of variants that you will get in the
            gnomAD browser when you search for a gene symbol. The gnomAD browser
-           filters to only variants located in or within 75 base pairs of CDS or non-coding exons of a gene.
+           filters to only variants located in or within 75 base pairs of CDS or
+           non-coding exons of a gene.
 
     :param gene: Gencode gene symbol.
     :param exon_padding_bp: Number of base pairs to pad the intervals. Default is 75bp.
@@ -141,16 +142,5 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
     ht = filter_by_intervals(
         filtered_gencode_ht.interval, ht=ht, padding_bp=exon_padding_bp
     )
-
-    contigs = filtered_gencode_ht.aggregate(
-        hl.agg.collect_as_set(filtered_gencode_ht.interval.start.contig)
-    )
-    if len(contigs) > 1:
-        hl.utils.warning(
-            "The gnomAD browser excludes genes on chrY that share the same gene symbol "
-            "as chrX. For example, if you use this function to filter 'ASMT' gene, you "
-            "may get more variants than shown in the gnomAD browser because it includes "
-            "both chrX and chrY variants."
-        )
 
     return ht
