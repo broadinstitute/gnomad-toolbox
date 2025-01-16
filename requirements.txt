@@ -7,3 +7,4 @@ jupyterlab
 nodejs
 npm
 jupyter_bokeh
+jupyter-server<2.0.0
