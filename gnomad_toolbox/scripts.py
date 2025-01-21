@@ -10,12 +10,10 @@ from typing import Union
 
 import click
 
-# Constants
 CONFIG_FILE = os.path.expanduser("~/.gnomad_toolbox_config.json")
 CONFIGS_DIR = "configs"
 NOTEBOOKS_DIR = "notebooks"
 
-# Logging configuration
 logging.basicConfig(format="%(levelname)s (%(name)s %(lineno)s): %(message)s")
 logger = logging.getLogger("gnomad_toolbox")
 logger.setLevel(logging.INFO)
@@ -61,7 +59,7 @@ def set_config(
     keys = key.split(".")
     current = config
 
-    # Traverse or create nested dictionaries
+    # Traverse or create nested dictionaries.
     for k in keys[:-1]:
         current = current.setdefault(k, {})
 
@@ -121,22 +119,28 @@ def copy_notebooks(destination: str, overwrite: bool = False) -> None:
     notebook_dir = os.path.join(pkg_dir, NOTEBOOKS_DIR)
     config_dir = os.path.join(pkg_dir, CONFIGS_DIR)
 
-    # Validate source directories
+    # Validate source directories.
     if not os.path.exists(notebook_dir):
         raise FileNotFoundError(f"No notebooks directory found at {notebook_dir}")
     if not os.path.exists(config_dir):
         raise FileNotFoundError(f"No configs directory found at {config_dir}")
 
-    # Copy notebooks
+    # Copy example jupyter notebooks.
     copy_directory(notebook_dir, destination, overwrite)
 
-    # Copy configs
+    # Copy jupyter configs.
     config_dest = os.path.join(destination, "jupyter_configs")
     copy_directory(config_dir, config_dest, overwrite)
 
-    # Update configuration
+    # Update gnomAD Toolbox configuration.
     set_config("notebook_dir", destination)
     logger.info("Default notebook directory set to: %s", destination)
+
+    # Modify the Jupyter config file to set the notebook directory.
+    jupyter_config = os.path.join(
+        destination, "jupyter_configs/jupyter_notebook_config.json"
+    )
+    set_config("NotebookApp.notebook_dir", destination, jupyter_config)
 
 
 @click.command()
@@ -174,11 +178,11 @@ def run_jupyter_cli() -> None:
         logger.error("Configured notebook directory does not exist: %s", notebook_dir)
         return
 
-    # Set Jupyter configuration directory
+    # Set Jupyter configuration directory.
     jupyter_config_dir = os.path.join(notebook_dir, "jupyter_configs")
     os.environ["JUPYTER_CONFIG_DIR"] = jupyter_config_dir
     logger.info("Launching Jupyter with config directory: %s", jupyter_config_dir)
 
-    # Launch Jupyter
+    # Launch Jupyter.
     command = sys.argv[1] if len(sys.argv) > 1 else "lab"
     subprocess.run(["jupyter", command])
