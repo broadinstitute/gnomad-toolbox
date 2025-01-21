@@ -22,6 +22,8 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/broadinstitute/gnomad-toolbox",
     packages=setuptools.find_namespace_packages(include=["gnomad_toolbox*"]),
+    include_package_data=True,
+    package_data={"gnomad_toolbox": ["notebooks/*.ipynb", "configs/*"]},
     project_urls={
         "Documentation": "https://broadinstitute.github.io/gnomad-toolbox/",
         "Source Code": "https://github.com/broadinstitute/gnomad-toolbox",
@@ -36,5 +38,11 @@ setuptools.setup(
         "Development Status :: 4 - Beta",
     ],
     python_requires=">=3.9",
+    entry_points={
+        "console_scripts": [
+            "copy-gnomad-toolbox-notebooks=gnomad_toolbox.scripts:copy_notebooks_cli",
+            "gnomad-toolbox-jupyter=gnomad_toolbox.scripts:run_jupyter_cli",
+        ],
+    },
     install_requires=install_requires,
 )
