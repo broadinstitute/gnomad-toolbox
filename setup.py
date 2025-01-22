@@ -8,8 +8,7 @@ with open("README.md", "r") as readme_file:
 install_requires = []
 with open("requirements.txt", "r") as requirements_file:
     for req in (line.strip() for line in requirements_file):
-        if req != "hail":
-            install_requires.append(req)
+        install_requires.append(req)
 
 
 setuptools.setup(
