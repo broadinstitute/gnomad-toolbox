@@ -2,10 +2,7 @@
 
 ![License](https://img.shields.io/github/license/broadinstitute/gnomad-toolbox)
 
-The gnomAD Toolbox is a Python package designed to streamline the use of gnomAD Hail Tables. The Genome Aggregation
-Database (gnomAD) is a widely used resource for understanding genetic variation, offering large-scale data on millions
-of variants across diverse populations. This toolbox simplifies tasks like loading, filtering, and analyzing gnomAD
-data, making it more accessible to researchers.
+The Genome Aggregation Database ([gnomAD](https://gnomad.broadinstitute.org/)) is a widely used resource for understanding genetic variation, offering large-scale data on millions of variants across diverse populations. This toolbox is a Python package designed to streamline use of gnomAD data, simplifying tasks like loading, filtering, and analysis, to make it more accessible to researchers.
 
 > **Disclaimer:** This package is in its early stages of development, and we are actively working on improving it.
 > There may be bugs, and the API is subject to change. Feedback and contributions are highly encouraged.
@@ -42,7 +39,7 @@ gnomad_toolbox/
 
 ## Set Up Your Environment for Hail and gnomAD Toolbox
 
-This section provides step-by-step instructions to set up a working environment for using Hail and the gnomAD Toolbox.
+This section provides step-by-step instructions to set up a working environment for using [Hail](https://hail.is/) and the gnomAD Toolbox.
 
 > We provide this guide to help you set up your environment, but we cannot guarantee that it will work on all systems.
 > If you encounter any issues, you can reach out to us on the [gnomAD Forum](https://discuss.gnomad.broadinstitute.org),
@@ -67,7 +64,7 @@ Before installing the toolbox, ensure the following:
       ```
       or using a packaged installation from [Azul](https://www.azul.com/downloads/?version=java-11-lts&os=macos&package=jdk&show-old-builds=true)
       > Make sure to choose a Java installation with a compatible architecture (Can be found in “Apple Menu > About
-      > This Mac”), Apple M1/M2 must use an “arm64” Java, otherwise use an “x86_64” Java.
+      > This Mac”); Apple M1/M2 must use an “arm64” Java, otherwise use an “x86_64” Java.
       >
       > You may also need to set the `JAVA_HOME` environment variable to the path of the installed Java version. For example:
       > ```commandline
