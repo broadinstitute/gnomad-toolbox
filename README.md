@@ -91,7 +91,7 @@ Miniconda is a lightweight distribution of Conda that includes just Conda and it
       ```commandline
       pip install git+https://github.com/broadinstitute/gnomad-toolbox@main
       ```
-   Note: If you encounter an error like: `pg_config executable not found`, you may need to install the `postgresql` package:
+   Note: If you encounter an error like: `Error: pg_config executable not found.`, you may need to install the `postgresql` package:
    ```commandline
    conda install postgresql
    ```
@@ -110,8 +110,8 @@ If you already have experience with gcloud and have no problem running these not
 you can skip this section.
 
 ### Prerequisites
-You must have a Google Cloud account and a project set up.
-   * If you don't have a Google Cloud account, you can sign up for a free trial [here](https://cloud.google.com/free).
+You must have a Google Cloud account and a project set up. If you don't have a Google Cloud account, you can sign up
+for a free trial [here](https://cloud.google.com/free).
 
 ### Install Google Cloud SDK (gcloud)
 
