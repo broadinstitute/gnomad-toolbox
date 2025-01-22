@@ -52,17 +52,28 @@ This section provides step-by-step instructions to set up a working environment 
 
 Before installing the toolbox, ensure the following:
 - Administrator access to install software.
-- A working Python >3.9 environment.
+- A working internet connection.
 - Java **11**.
-  > For macOS: [Hail recommends](https://hail.is/docs/0.2/install/macosx.html) using a packaged installation from
-  > [Azul](https://www.azul.com/downloads/?version=java-11-lts&os=macos&package=jdk&show-old-builds=true) or using
-  > [Homebrew](https://brew.sh/):
-  > ```commandline
-  > brew tap homebrew/cask-versions
-  > brew install --cask temurin8
-  > ```
-  > Make sure to choose a Java installation with a compatible architecture (Can be found in “Apple Menu > About This
-  > Mac”), Apple M1/M2 must use an “arm64” Java, otherwise use an “x86_64” Java.
+  - Check your Java version:
+    ```commandline
+    java -version
+    ```
+  - If you do not have Java 11 installed:
+    - For Linux, use `apt-get` or `yum` to install OpenJDK 11.
+    - For macOS, [Hail recommends](https://hail.is/docs/0.2/install/macosx.html) using [Homebrew](https://brew.sh/):
+      ```commandline
+      brew tap homebrew/cask-versions
+      brew install --cask temurin8
+      ```
+      or using a packaged installation from [Azul](https://www.azul.com/downloads/?version=java-11-lts&os=macos&package=jdk&show-old-builds=true)
+      > Make sure to choose a Java installation with a compatible architecture (Can be found in “Apple Menu > About
+      > This Mac”), Apple M1/M2 must use an “arm64” Java, otherwise use an “x86_64” Java.
+      >
+      > You may also need to set the `JAVA_HOME` environment variable to the path of the installed Java version. For example:
+      > ```commandline
+      > export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-11.jdk/Contents/Home
+      > export PATH=$JAVA_HOME/bin:$PATH
+      > ```
 
 ### Install Miniconda
 
