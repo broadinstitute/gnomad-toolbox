@@ -30,8 +30,8 @@ gnomad_toolbox/
 │   ├── general.py       # General-purpose analyses, such as summarizing variant statistics.
 │
 ├── notebooks/           # Example Jupyter notebooks.
-│   ├── explore_release_data.ipynb       # Guide to loading gnomAD release data.
-│   ├── intro_to_filtering_variant_data.ipynb # Introduction to filtering gnomAD variants.
+│   ├── explore_release_data.ipynb                  # Guide to loading gnomAD release data.
+│   ├── intro_to_filtering_variant_data.ipynb    # Introduction to filtering gnomAD variants.
 │   ├── dive_into_secondary_analyses.ipynb   # Secondary analyses using gnomAD data.
 ```
 
@@ -62,9 +62,10 @@ Before installing the toolbox, ensure the following:
       brew tap homebrew/cask-versions
       brew install --cask temurin8
       ```
-      or using a packaged installation from [Azul](https://www.azul.com/downloads/?version=java-11-lts&os=macos&package=jdk&show-old-builds=true)
-      > Make sure to choose a Java installation with a compatible architecture (Can be found in “Apple Menu > About
-      > This Mac”); Apple M1/M2 must use an “arm64” Java, otherwise use an “x86_64” Java.
+      or using a packaged installation from [Azul](https://www.azul.com/downloads/?version=java-11-lts&os=macos&package=jdk&show-old-builds=true).
+      > Ensure you choose a Java installation that matches your system architecture (found in **Apple Menu > About This Mac**).  
+      > - For Apple M1/M2 chips, select an **arm64** Java package.  
+      > - For Intel-based Macs, choose an **x86_64** Java package.
       >
       > You may also need to set the `JAVA_HOME` environment variable to the path of the installed Java version. For example:
       > ```commandline
