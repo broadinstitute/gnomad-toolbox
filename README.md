@@ -140,10 +140,24 @@ The gnomAD Toolbox includes Jupyter notebooks to help you get started with gnomA
 > If you already have experience with Google Cloud and using Jupyter notebooks, you can skip this section and use the
 > notebooks in your preferred environment.
 
-### Install the Cloud Storage Connector
+Hail can be [initialized](https://hail.is/docs/0.2/api.html#hail.init) with different backends depending on
+where you want to run your analysis. For analyses that require a lot of computational resources, a cloud-based
+environment will be most suitable.
 
-Hail uses the Google Cloud Storage Connector to read and write data from Google Cloud Storage. The easiest way to
-install the connector is to use the `install-gcs-connector` script provided by the Broad Institute:
+However, running the gnomaAD Toolbox example notebooks can be done locally using the
+`local` backend. At the beginning of each notebook, Hail is initialized with the `local` backend using:
+   ```python
+   hl.init(backend="local")
+   ```
+
+To run the example notebooks locally, there are a few additional steps needed to set up your environment:
+
+### Install the Cloud Storage Connector
+The gnomAD Hail tables are stored in Google Cloud Storage, and in order to avoid downloading the entire dataset to your local machine,
+we recommend using the [Google Cloud Storage Connector](https://cloud.google.com/dataproc/docs/concepts/connectors/cloud-storage)
+to access the data.
+
+The easiest way to install the connector is to use the `install-gcs-connector` script provided by the Broad Institute:
 ```commandline
 curl -sSL https://broad.io/install-gcs-connector | python3 - --auth-type UNAUTHENTICATED
 ```
