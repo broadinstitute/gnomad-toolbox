@@ -40,20 +40,20 @@ gnomad_toolbox/
 
 This section provides step-by-step instructions to set up a working environment for using Hail and the gnomAD Toolbox.
 
-> **Note:** We provide this guide to help you set up your environment, but we cannot guarantee that it will work on all systems. If you encounter any issues, you can reach out to us on the [gnomAD Forum](https://discuss.gnomad.broadinstitute.org), and if it is something that we have come across before, we will try to help you out.
+> We provide this guide to help you set up your environment, but we cannot guarantee that it will work on all systems. If you encounter any issues, you can reach out to us on the [gnomAD Forum](https://discuss.gnomad.broadinstitute.org), and if it is something that we have come across before, we will try to help you out.
 
 ### Prerequisites
 
 Before installing the toolbox, ensure the following:
 - Administrator access to install software.
 - A working Python >3.9 environment.
-- Java **8** or Java **11** for Hail.
-   > **Note:** If you are using an Apple M1/M2 chip, you must have arm64 Java installed. Verify your Java installation:
-   > ```bash
-   > java -version
-   > file $JAVA_HOME/bin/java
-   > ```
-   > If you need arm64 Java, download it [here](https://www.azul.com/downloads/?os=macos&architecture=arm-64-bit&package=jre#zulu).
+- Java **11**.
+  > For macOS: [Hail recommends](https://hail.is/docs/0.2/install/macosx.html) using a packaged installation from [Azul](https://www.azul.com/downloads/?version=java-11-lts&os=macos&package=jdk&show-old-builds=true) or using [Homebrew](https://brew.sh/):
+  > ```commandline
+  > brew tap homebrew/cask-versions
+  > brew install --cask temurin8
+  > ```
+  > Make sure to choose a Java installation with a compatible architecture (Can be found in “Apple Menu > About This Mac”), Apple M1/M2 must use an “arm64” Java, otherwise use an “x86_64” Java.
 
 ### Install Miniconda
 
@@ -102,9 +102,7 @@ print("Hail and gnomad_toolbox setup is complete!")
 
 ---
 
-## Access gnomAD Data Locally with example notebooks
-
-> **Note:** If you already have experience with gcloud and have no problem running these notebooks, you can skip this section.
+## Available Example Notebooks
 
 The gnomAD Toolbox includes Jupyter notebooks to help you get started with gnomAD data:
 
@@ -120,6 +118,9 @@ The gnomAD Toolbox includes Jupyter notebooks to help you get started with gnomA
    - Explore more advanced analyses using gnomAD data.
    - Notebook: `dive_into_secondary_analyses.ipynb`
 
+## Run the Example Notebooks Locally
+> If you already have experience with Google Cloud and using Jupyter notebooks, you can skip this section and use the notebooks in your preferred environment.
+
 ### Install the Cloud Storage Connector
 
 Hail uses the Google Cloud Storage Connector to read and write data from Google Cloud Storage. The easiest way to install the connector is to use the `install-gcs-connector` script provided by the Broad Institute:
@@ -133,7 +134,7 @@ curl -sSL https://broad.io/install-gcs-connector | python3 - --auth-type UNAUTHE
    ```commandline
    copy-gnomad-toolbox-notebooks /path/to/your/notebooks
    ```
-   > **Note:** If the specified directory already exists, you will need to provide a different path, or if you want to overwrite the existing directory, you will need to add the `--overwrite` flag:
+   > If the specified directory already exists, you will need to provide a different path, or if you want to overwrite the existing directory, you will need to add the `--overwrite` flag:
    >   ```commandline
    >   copy-gnomad-toolbox-notebooks /path/to/your/notebooks --overwrite
    >   ```
@@ -148,7 +149,7 @@ curl -sSL https://broad.io/install-gcs-connector | python3 - --auth-type UNAUTHE
      gnomad-toolbox-jupyter lab
      ```
 
-   > **Note:** These commands will start a Jupyter notebook/lab server and open a new tab in your default web browser. The notebook directory containing the example notebooks will be displayed.
+   > These commands will start a Jupyter notebook/lab server and open a new tab in your default web browser. The notebook directory containing the example notebooks will be displayed.
 
 3. Open the `explore_release_data.ipynb` notebook to learn how to load gnomAD release data:
    - Run all cells by clicking on the >> button in the toolbar (shown in the image below) or by selecting "Run All" from the "Cell" menu.
