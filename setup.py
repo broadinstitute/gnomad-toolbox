@@ -23,7 +23,7 @@ setuptools.setup(
     url="https://github.com/broadinstitute/gnomad-toolbox",
     packages=setuptools.find_namespace_packages(include=["gnomad_toolbox*"]),
     include_package_data=True,
-    package_data={"gnomad_toolbox": ["notebooks/*.ipynb", "configs/*"]},
+    package_data={"gnomad_toolbox": ["notebooks/*.ipynb", "configs/**"]},
     project_urls={
         "Documentation": "https://broadinstitute.github.io/gnomad-toolbox/",
         "Source Code": "https://github.com/broadinstitute/gnomad-toolbox",

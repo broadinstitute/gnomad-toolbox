@@ -1,2 +1,2 @@
 include gnomad_toolbox/notebooks/*.ipynb
-include gnomad_toolbox/configs/*
+include gnomad_toolbox/configs/**
