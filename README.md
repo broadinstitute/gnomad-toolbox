@@ -147,7 +147,7 @@ loading and filtering gnomAD data.
 
 3. Open the `explore_release_data.ipynb` notebook to learn how to load gnomAD release data. You can run all cells by
 clicking on the >> button in the toolbar (shown in the image below) or by selecting "Run All" from the "Cell" menu.
-   ![jupyter notebook -- run all cells](images/run_all_cells.png)
+   ![jupyter notebook -- run all cells](images/jupyter_run_all.png)
 
 4. Explore the other notebooks to learn about additional functionalities and analyses you can perform with gnomAD data.
 
