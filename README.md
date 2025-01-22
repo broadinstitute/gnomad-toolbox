@@ -109,43 +109,12 @@ print("Hail and gnomad_toolbox setup is complete!")
 If you already have experience with gcloud and have no problem running these notebooks,
 you can skip this section.
 
-### Prerequisites
-You must have a Google Cloud account and a project set up. If you don't have a Google Cloud account, you can sign up
-for a free trial [here](https://cloud.google.com/free).
-
-### Install Google Cloud SDK (gcloud)
-
-The Google Cloud SDK is required to interact with Google Cloud services and access gnomAD public data locally.
-1. Follow the official Google Cloud SDK installation [guide](https://cloud.google.com/sdk/docs/install) for your operating system.
-2. After installation, initialize gcloud to log in and set up your default project:
-   ```commandline
-   gcloud init
-   ```
-3. You can check your gcloud config by:
-   ```commandline
-   gcloud config list
-   ```
-   or set the default project:
-   ```commandline
-   gcloud config set project {YOUR_PROJECT_ID}
-   ```
-
-### Configure a Service Account
-You will need to create a service account in gcloud console IAM & Admin or using
-cloud CLI. Then you can create a key for service account and set the key.
-
-1. Create a service account:
-   ```commandline
-   gcloud iam service-accounts create hail-local-sa --display-name "Hail Local Service Account"
-   ```
-2. Create service account key:
-   ```commandline
-   gcloud iam service-accounts keys create hail-local-sa-key.json --iam-account hail-local-sa@{YOUR_PROJECT_ID}.iam.gserviceaccount.com
-   ```
-3. Set the GOOGLE_APPLICATION_CREDENTIALS environment variable to the path of the service account key:
-   ```commandline
-   export GOOGLE_APPLICATION_CREDENTIALS=/full/path/to/hail-local-sa-key.json
-   ```
+### Install the Cloud Storage Connector
+Hail uses the Google Cloud Storage Connector to read and write data from Google Cloud Storage. The easiest way to
+install the connector is to use the `install-gcs-connector` script provided by the Broad Institute:
+```commandline
+curl -sSL https://broad.io/install-gcs-connector | python3 - --auth-type UNAUTHENTICATED
+```
 
 ### Using the Example Notebooks
 The gnomAD tool-box package includes example notebooks to help you get started with
@@ -196,9 +165,3 @@ clicking on the >> button in the toolbar (shown in the image below) or by select
 ### Hail:
    * [Hail Documentation](https://hail.is/docs/0.2/index.html)
    * [Hail Discussion Forum](https://discuss.hail.is/)
-
-### Google Cloud:
-   * [SDK Documentation](https://cloud.google.com/sdk/docs)
-   * [Free Trial](https://cloud.google.com/free)
-   * [Service Account Creation](https://cloud.google.com/iam/docs/service-accounts-create#creating)
-   * [Service Account Key Creation](https://cloud.google.com/iam/docs/keys-create-delete#creating)
