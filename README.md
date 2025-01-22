@@ -138,9 +138,13 @@ cloud CLI. Then you can create a key for service account and set the key.
    ```commandline
    gcloud iam service-accounts create hail-local-sa --display-name "Hail Local Service Account"
    ```
-2. Set the GOOGLE_APPLICATION_CREDENTIALS environment variable to the path of the service account key:
+2. Create service account key:
    ```commandline
-   export GOOGLE_APPLICATION_CREDENTIALS=./hail-local-sa-key.json
+   gcloud iam service-accounts keys create hail-local-sa-key.json --iam-account hail-local-sa@{YOUR_PROJECT_ID}.iam.gserviceaccount.com
+   ```
+3. Set the GOOGLE_APPLICATION_CREDENTIALS environment variable to the path of the service account key:
+   ```commandline
+   export GOOGLE_APPLICATION_CREDENTIALS=/full/path/to/hail-local-sa-key.json
    ```
 
 ### Using the Example Notebooks
@@ -170,9 +174,31 @@ loading and filtering gnomAD data.
    These commands will start a Jupyter notebook/lab server and open a new tab in your default web browser. The notebook
    directory containing the example notebooks will be displayed.
 
-3. Open the `explore_release_data.ipynb` notebook to learn how to load gnomAD release data.
+3. Open the `explore_release_data.ipynb` notebook to learn how to load gnomAD release data. You can run all cells by
+clicking on the >> button in the toolbar (shown in the image below) or by selecting "Run All" from the "Cell" menu.
+   ![jupyter notebook -- run all cells](images/run_all_cells.png)
 
 4. Explore the other notebooks to learn about additional functionalities and analyses you can perform with gnomAD data.
 
 5. Try adding your own queries to the notebooks to explore the data further.
 **WARNING: you should avoid running queries on the full dataset as it may take a long time.**
+
+---
+
+## Resources
+
+### gnomAD:
+   * [gnomAD Toolbox Documentation](https://broadinstitute.github.io/gnomad-toolbox/)
+   * [gnomAD Browser](https://gnomad.broadinstitute.org/)
+   * [gnomAD Download Page](https://gnomad.broadinstitute.org/downloads)
+   * [gnomAD Forum](https://discuss.gnomad.broadinstitute.org)
+
+### Hail:
+   * [Hail Documentation](https://hail.is/docs/0.2/index.html)
+   * [Hail Discussion Forum](https://discuss.hail.is/)
+
+### Google Cloud:
+   * [SDK Documentation](https://cloud.google.com/sdk/docs)
+   * [Free Trial](https://cloud.google.com/free)
+   * [Service Account Creation](https://cloud.google.com/iam/docs/service-accounts-create#creating)
+   * [Service Account Key Creation](https://cloud.google.com/iam/docs/keys-create-delete#creating)
