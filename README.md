@@ -196,6 +196,7 @@ curl -sSL https://broad.io/install-gcs-connector | python3 - --auth-type UNAUTHE
 ### Hail:
 - [Hail Documentation](https://hail.is/docs/0.2/index.html)
 - [Hail Discussion Forum](https://discuss.hail.is/)
+- [Hail Zulip Chat](https://hail.zulipchat.com/)
 
 ---
 
