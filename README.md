@@ -136,6 +136,8 @@ The gnomAD Toolbox includes Jupyter notebooks to help you get started with gnomA
    - Explore more advanced analyses using gnomAD data.
    - Notebook: `dive_into_secondary_analyses.ipynb`
 
+---
+
 ## Run the Example Notebooks Locally
 > If you already have experience with Google Cloud and using Jupyter notebooks, you can skip this section and use the
 > notebooks in your preferred environment.
