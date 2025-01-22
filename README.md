@@ -105,6 +105,8 @@ hl.init()
 print("Hail and gnomad_toolbox setup is complete!")
 ```
 
+---
+
 ## Accessing gnomAD Data Locally with example notebooks
 If you already have experience with gcloud and have no problem running these notebooks,
 you can skip this section.
