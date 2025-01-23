@@ -1,6 +1,6 @@
 """Set of general functions for gnomAD analysis."""
 
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional
 
 import hail as hl
 from gnomad.assessment.summary_stats import freq_bin_expr
@@ -9,7 +9,7 @@ from gnomad_toolbox.load_data import _get_dataset
 
 
 def get_variant_count_by_freq_bin(
-    af_cutoffs: List[float] = [0.001, 0.01],
+    af_cutoffs: Optional[List[float]] = None,
     singletons: bool = False,
     doubletons: bool = False,
     pass_only: bool = True,
@@ -37,6 +37,10 @@ def get_variant_count_by_freq_bin(
         'data_type', and 'version'.
     :return: Dictionary with counts.
     """
+    # Initialize af_cutoffs if not provided
+    if af_cutoffs is None:
+        af_cutoffs = [0.001, 0.01]
+
     # Load the Hail Table if not provided
     ht = _get_dataset(dataset="variant", **kwargs)
 
