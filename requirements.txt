@@ -1,3 +1,9 @@
-# We're using the main branch of gnomad_method on github rather than the pip version
-git+https://github.com/broadinstitute/gnomad_methods@main
+gnomad @ git+https://github.com/broadinstitute/gnomad_methods@main
 hail
+jupyter
+jupyter_contrib_nbextensions
+jupyter_nbextensions_configurator
+jupyterlab
+nodejs
+npm
+jupyter-server<2.0.0
