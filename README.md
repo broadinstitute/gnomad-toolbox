@@ -1,140 +1,228 @@
-# gnomad-toolbox
-This repository provides a set of Python functions to simplify working with gnomAD Hail Tables. It includes tools for data access, filtering, and analysis.
+# gnomad-toolbox: Simplifying Access and Analysis of gnomAD Data
 
-## Repository structure
+![License](https://img.shields.io/github/license/broadinstitute/gnomad-toolbox)
+
+The Genome Aggregation Database ([gnomAD](https://gnomad.broadinstitute.org/)) is a widely used resource for understanding genetic variation, offering large-scale data on millions of variants across diverse populations. This toolbox is a Python package designed to streamline use of gnomAD data, simplifying tasks like loading, filtering, and analysis, to make it more accessible to researchers.
+
+> **Disclaimer:** This package is in its early stages of development, and we are actively working on improving it.
+> There may be bugs, and the API is subject to change. Feedback and contributions are highly encouraged.
+
+---
+
+## Repository Structure
+
+The package is organized as follows:
+
 ```
-ggnomad_toolbox/
+gnomad_toolbox/
 │
 ├── load_data.py         # Functions to load gnomAD release Hail Tables.
 │
-├── filtering/
-│   ├── __init__.py
-│   ├── constraint.py    # Functions to filter constraint metrics (e.g., observed/expected ratios).
-│   ├── coverage.py      # Functions to filter variants or regions based on coverage thresholds.
-│   ├── frequency.py     # Functions to filter variants by allele frequency thresholds.
-│   ├── pext.py          # Functions to filter variants using predicted expression (pext) scores.
-|   ├── variant.py       # Functions to filter to a specific variant or set of variants.
-│   ├── vep.py           # Functions to filter variants based on VEP (Variant Effect Predictor) annotations.
+├── filtering/           # Modules for filtering gnomAD data.
+│   ├── constraint.py    # Filter by constraint metrics (e.g., observed/expected ratios).
+│   ├── coverage.py      # Filter by coverage thresholds.
+│   ├── frequency.py     # Filter by allele frequency thresholds.
+│   ├── pext.py          # Filter by predicted expression (pext) scores.
+│   ├── variant.py       # Filter specific variants or sets of variants.
+│   ├── vep.py           # Filter by VEP (Variant Effect Predictor) annotations.
 │
-├── analysis/
-│   ├── __init__.py
-│   ├── general.py       # General analysis functions, such as summarizing variant statistics.
+├── analysis/            # Analysis functions.
+│   ├── general.py       # General-purpose analyses, such as summarizing variant statistics.
 │
-├── notebooks/
-│   ├── intro_to_release_data.ipynb    # Jupyter notebook introducing the loading of gnomAD release data.
+├── notebooks/           # Example Jupyter notebooks.
+│   ├── explore_release_data.ipynb               # Guide to loading gnomAD release data.
+│   ├── intro_to_filtering_variant_data.ipynb    # Introduction to filtering gnomAD variants.
+│   ├── dive_into_secondary_analyses.ipynb       # Secondary analyses using gnomAD data.
 ```
 
-## Setting Up Your Environment for Hail and gnomAD Toolbox
+---
 
-This guide provides step-by-step instructions to set up a working environment for
-using Hail and the gnomad_toolbox.
+## Set Up Your Environment for Hail and gnomAD Toolbox
 
-Prerequisites
+This section provides step-by-step instructions to set up a working environment for using [Hail](https://hail.is/) and the gnomAD Toolbox.
 
-Before starting, ensure you have the following:
-* Administrator access to your system to install software.
-* Internet connection for downloading dependencies.
+> We provide this guide to help you set up your environment, but we cannot guarantee that it will work on all systems.
+> If you encounter any issues, you can reach out to us on the [gnomAD Forum](https://discuss.gnomad.broadinstitute.org),
+> and if it is something that we have come across before, we will try to help you out.
 
+### Prerequisites
 
-## Part 1: Setting Up Your Environment
+Before installing the toolbox, ensure the following:
+- Administrator access to install software.
+- A working internet connection.
+- Java **11**.
+  - Check your Java version:
+    ```commandline
+    java -version
+    ```
+  - If you do not have Java 11 installed:
+    - For Linux, use `apt-get` or `yum` to install OpenJDK 11.
+    - For macOS, [Hail recommends](https://hail.is/docs/0.2/install/macosx.html) using [Homebrew](https://brew.sh/):
+      ```commandline
+      brew tap homebrew/cask-versions
+      brew install --cask temurin8
+      ```
+      or using a packaged installation from [Azul](https://www.azul.com/downloads/?version=java-11-lts&os=macos&package=jdk&show-old-builds=true).
+      > Ensure you choose a Java installation that matches your system architecture (found in **Apple Menu > About This Mac**).
+      > - For Apple M1/M2 chips, select an **arm64** Java package.
+      > - For Intel-based Macs, choose an **x86_64** Java package.
+      >
+      > You may also need to set the `JAVA_HOME` environment variable to the path of the installed Java version. For example:
+      > ```commandline
+      > export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-11.jdk/Contents/Home
+      > export PATH=$JAVA_HOME/bin:$PATH
+      > ```
 
 ### Install Miniconda
-Miniconda is a lightweight distribution of Conda that includes just Conda and its dependencies.
-1. Download Miniconda for your system from the [official website](https://docs.anaconda.com/miniconda/install/).
-2. Follow the installation instructions for your operating system:
 
-	•	Linux/macOS: Run the installer script in your terminal:
-    ```
-    bash Miniconda3-latest-Linux-x86_64.sh
-    ```
-    •	Windows: Run the installer executable and follow the installation wizard.
-        (# TODO: Will we encourage users to use Windows?)
-3. Confirm the installation by running:
-   ```
+Miniconda is a lightweight distribution of Conda.
+
+1. Download Miniconda from the [official website](https://docs.anaconda.com/miniconda/install/).
+2. Follow the installation instructions described on the download page for your operating system.
+3. Verify installation:
+   ```commandline
    conda --version
    ```
 
-### Create a Conda Environment
-1. Create a new Conda environment with a specific version of Python:
-   ```commandline
-   conda create -n gnomad-toolbox python=3.11
-   ```
-2. Activate the Conda environment:
-   ```commandline
-   conda activate gnomad-toolbox
-   ```
-3. Clone the gnomad-toolbox repository and install the dependencies:
-   ```commandline
-   cd /path/to/your/directory
-   git clone https://github.com/broadinstitute/gnomad-toolbox.git
-   cd gnomad-toolbox
-   pip install -r requirements.txt
-   ```
-   **Note:** Hail 0.2.127+ requires Java 8 or Java 11 and jupyter labs requires Java
-   11+, and if you have an Apple M1 or M2, you must have arm64 Java installed, you
-   can first check your Java version by running:
-   ```commandline
-    java -version
-   ```
-   and check if you have the arm64 Java by running:
-   ```commandline
-    file $JAVA_HOME/bin/java
-   ```
-   If you don't have the arm64 Java, you can find it [here](https://www.azul.com/downloads/?os=macos&architecture=arm-64-bit&package=jre#zulu)
+### Set Up a Conda Environment
 
-   You might encounter errors when installing the dependencies, such as `pg_config
-   executable not found`. If so, you may need to install additional system packages.
-   For example, on Ubuntu, you can install the `libpq-dev` package:
-   ```commandline
-    sudo apt-get install libpq-dev
-   ```
-   or on macOS, you can install the `postgresql` package:
-   ```commandline
-    brew install postgresql
-   ```
+Create and activate a new environment with a specified Python version for the gnomAD Toolbox:
+```commandline
+conda create -n gnomad-toolbox python=3.11
+conda activate gnomad-toolbox
+```
 
-### Verify the Setup
-   Start a Python shell and test if Hail and gnomad_toolbox are working:
-   ```commandline
-   import hail as hl
-   from gnomad_toolbox.analysis.general import get_variant_count_by_freq_bin
-   hl.init()
-   print("Hail and gnomad_toolbox setup is complete!")
-   ```
-   Or open the notebooks:
-   ```commandline
-   jupyter lab
-   ```
+### Install gnomAD Toolbox
+- To install from PyPI:
+  ```commandline
+  pip install gnomad-toolbox
+  ```
+- To install the latest development version from GitHub:
+  ```commandline
+  pip install git+https://github.com/broadinstitute/gnomad-toolbox@main
+  ```
 
-## Part2: Accessing gnomAD Data Locally with example notebooks
-If you already have experience with gcloud and have no problem running these notebooks,
-you can skip this section.
+> **Troubleshooting:** If you encounter an error such as `Error: pg_config executable not found`, install the
+> `postgresql` package:
+> ```commandline
+> conda install postgresql
+> ```
 
-### Install Google Cloud SDK (gcloud)
 
-The Google Cloud SDK is required to interact with Google Cloud services and access gnomAD public data locally.
-1. Follow the official Google Cloud SDK installation [guide](https://cloud.google.com/sdk/docs/install) for your operating system.
-2. After installation, initialize gcloud to log in and set up your default project:
-   ```
-   gcloud init
-   ```
-3. You can check your gcloud config by:
-   ```
-   gcloud config list
-   ```
-   or set the default project:
-   ```
-   gcloud config set project {YOUR_PROJECT_ID}
+### Verify the Installation
+
+Start a Python shell and ensure that Hail and the gnomAD Toolbox are set up correctly:
+```python
+import hail as hl
+import gnomad_toolbox
+hl.init()
+print("Hail and gnomad_toolbox setup is complete!")
+```
+
+---
+
+## Available Example Notebooks
+
+The gnomAD Toolbox includes Jupyter notebooks to help you get started with gnomAD data:
+
+- **Explore Release Data:**
+   - Learn how to load and inspect gnomAD release data.
+   - Notebook: `explore_release_data.ipynb`
+
+- **Filter Variants:**
+   - Understand how to filter variants using different criteria.
+   - Notebook: `intro_to_filtering_variant_data.ipynb`
+
+- **Perform Secondary Analyses:**
+   - Explore more advanced analyses using gnomAD data.
+   - Notebook: `dive_into_secondary_analyses.ipynb`
+
+---
+
+## Run the Example Notebooks Locally
+> If you already have experience with Google Cloud and using Jupyter notebooks, you can skip this section and use the
+> notebooks in your preferred environment.
+
+Hail can be [initialized](https://hail.is/docs/0.2/api.html#hail.init) with different backends depending on
+where you want to run your analysis. For analyses that require a lot of computational resources, a cloud-based
+environment will be most suitable.
+
+However, running the gnomaAD Toolbox example notebooks can be done locally using the
+`local` backend. At the beginning of each notebook, Hail is initialized with the `local` backend using:
+   ```python
+   hl.init(backend="local")
    ```
 
-### Configure a Service Account
-You will need to create a service account in gcloud console IAM & Admin or using
-cloud CLI. Then you can create a key for service account and set the key.
+To run the example notebooks locally, there are a few additional steps needed to set up your environment:
 
+### Install the Cloud Storage Connector
+The gnomAD Hail tables are stored in Google Cloud Storage, and in order to avoid downloading the entire dataset to your local machine,
+we recommend using the [Google Cloud Storage Connector](https://cloud.google.com/dataproc/docs/concepts/connectors/cloud-storage)
+to access the data.
+
+The easiest way to install the connector is to use the `install-gcs-connector` script provided by the Broad Institute:
+```commandline
+curl -sSL https://broad.io/install-gcs-connector | python3 - --auth-type UNAUTHENTICATED
+```
+
+### Copy and Open the Notebooks
+
+1. Copy the notebooks to a directory of your choice:
    ```commandline
-   gcloud iam service-accounts keys create hail-local-sa-key.json --iam-account {YOUR_SERVICE_ACCOUNT}
-   export GOOGLE_APPLICATION_CREDENTIALS=./hail-local-sa-key.json
+   copy-gnomad-toolbox-notebooks /path/to/your/notebooks
    ```
-Now, you can access gnomAD data locally using the gnomad_toolbox functions, however,
-you should avoid running queries on the full dataset as it may take a long time and
-consume a lot of resources, and most importantly, it may generate costs.
+   > If the specified directory already exists, you will need to provide a different path, or if you want to overwrite
+   > the existing directory, you will need to add the `--overwrite` flag:
+   >   ```commandline
+   >   copy-gnomad-toolbox-notebooks /path/to/your/notebooks --overwrite
+   >   ```
+
+2. Start Jupyter with gnomad-toolbox specific configurations:
+   - For Jupyter Notebook:
+     ```commandline
+     gnomad-toolbox-jupyter notebook
+     ```
+   - For Jupyter Lab:
+     ```commandline
+     gnomad-toolbox-jupyter lab
+     ```
+
+   > These commands will start a Jupyter notebook/lab server and open a new tab in your default web browser. The
+   > notebook directory containing the example notebooks will be displayed.
+
+3. Open the `explore_release_data.ipynb` notebook to learn how to load gnomAD release data:
+   - Run all cells by clicking on the >> button in the toolbar (shown in the image below) or by selecting "Run All"
+   - from the "Cell" menu.
+      ![jupyter notebook -- run all cells](images/jupyter_run_all.png)
+
+4. Explore the other notebooks described above.
+
+5. Try adding your own queries to the notebooks to explore the data further.
+   > **WARNING:** Avoid running queries on the full dataset as it may take a long time.
+
+---
+
+## Resources
+
+### gnomAD:
+- [gnomAD Toolbox Documentation](https://broadinstitute.github.io/gnomad-toolbox/)
+- [gnomAD Browser](https://gnomad.broadinstitute.org/)
+- [gnomAD Download Page](https://gnomad.broadinstitute.org/downloads)
+- [gnomAD Forum](https://discuss.gnomad.broadinstitute.org)
+
+### Hail:
+- [Hail Documentation](https://hail.is/docs/0.2/index.html)
+- [Hail Discussion Forum](https://discuss.hail.is/)
+- [Hail Zulip Chat](https://hail.zulipchat.com/)
+
+---
+
+## Contributing
+
+We welcome contributions to the gnomAD Toolbox! See the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
+
+---
+
+## License
+
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](LICENSE) file for details.
