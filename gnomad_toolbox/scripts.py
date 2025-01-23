@@ -27,7 +27,7 @@ def load_config(config_file: str = CONFIG_FILE) -> dict:
     :return: The configuration dictionary.
     """
     if os.path.exists(config_file):
-        with open(config_file, "r") as f:
+        with open(config_file, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
 
@@ -40,7 +40,7 @@ def save_config(config: dict, config_file: str = CONFIG_FILE) -> None:
     :param config_file: Path to the configuration file.
     :return: None.
     """
-    with open(config_file, "w") as f:
+    with open(config_file, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=4)
 
 
@@ -159,8 +159,12 @@ def copy_notebooks_cli(destination: str, overwrite: bool) -> None:
     try:
         copy_notebooks(destination, overwrite)
         logger.info("Notebooks successfully copied to %s.", destination)
-    except Exception as e:
-        logger.error("Error during notebook copy: %s", e)
+    except FileNotFoundError:
+        logger.error("The destination directory %s does not exist.", destination)
+    except PermissionError:
+        logger.error("Permission denied while accessing %s.", destination)
+    except OSError as e:
+        logger.error("OS error during notebook copy: %s", e)
 
 
 def run_jupyter_cli() -> None:
@@ -185,4 +189,7 @@ def run_jupyter_cli() -> None:
 
     # Launch Jupyter.
     command = sys.argv[1] if len(sys.argv) > 1 else "lab"
-    subprocess.run(["jupyter", command])
+    try:
+        subprocess.run(["jupyter", command], check=True)
+    except subprocess.CalledProcessError as e:
+        logger.error("Failed to launch Jupyter: %s", e)

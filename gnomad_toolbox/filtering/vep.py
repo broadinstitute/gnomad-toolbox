@@ -13,8 +13,6 @@ from gnomad.utils.vep import (
 from gnomad_toolbox.load_data import _get_dataset, get_compatible_dataset_versions
 
 
-# TODO: Check these csq sets, the ones in the code don't match what is listed on the
-#  browser. We should make sure they are consistent.
 def filter_by_consequence_category(
     plof: bool = False,
     missense: bool = False,
