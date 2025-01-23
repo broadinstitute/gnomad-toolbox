@@ -50,31 +50,7 @@ def filter_by_consequence_category(
 
         Other:
 
-            - protein_altering_variant
-            - incomplete_terminal_codon_variant
-            - stop_retained_variant
-            - coding_sequence_variant
-            - mature_miRNA_variant
-            - 5_prime_UTR_variant
-            - 3_prime_UTR_variant
-            - non_coding_transcript_exon_variant
-            - non_coding_exon_variant
-            - NMD_transcript_variant
-            - non_coding_transcript_variant
-            - nc_transcript_variant
-            - downstream_gene_variant
-            - TFBS_ablation
-            - TFBS_amplification
-            - TF_binding_site_variant
-            - regulatory_region_ablation
-            - regulatory_region_amplification
-            - feature_elongation
-            - regulatory_region_variant
-            - feature_truncation
-            - intergenic_variant
-            - intron_variant
-            - splice_region_variant
-            - upstream_gene_variant
+            - All other consequences not included in the above categories.
 
     :param plof: Whether to include pLoF variants.
     :param missense: Whether to include missense variants.
@@ -92,8 +68,14 @@ def filter_by_consequence_category(
     # Load the Hail Table if not provided
     ht = _get_dataset(dataset="variant", **kwargs)
 
-    lof_csqs = list(LOF_CSQ_SET)
-    missense_csqs = ["missense_variant", "inframe_insertion", "inframe_deletion"]
+    lof_csqs = list(LOF_CSQ_SET + ["transcript_ablation"])
+    missense_csqs = [
+        "missense_variant",
+        "inframe_insertion",
+        "inframe_deletion",
+        "stop_lost",
+        "start_lost",
+    ]
     synonymous_csqs = ["synonymous_variant"]
     other_csqs = lof_csqs + missense_csqs + synonymous_csqs
 
@@ -163,6 +145,7 @@ def filter_to_high_confidence_loftee(
         is False.
     :param canonical_only: Whether to include only canonical transcripts. Default is
         False.
+    :param version: Optional version of the dataset to use.
     :param kwargs: Additional arguments to pass to `_get_dataset`.
     :return: Table with high-confidence LOFTEE variants.
     """
