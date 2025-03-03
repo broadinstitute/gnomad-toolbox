@@ -68,7 +68,7 @@ def filter_by_consequence_category(
     # Load the Hail Table if not provided
     ht = _get_dataset(dataset="variant", **kwargs)
 
-    lof_csqs = list(LOF_CSQ_SET + ["transcript_ablation"])
+    lof_csqs = list(LOF_CSQ_SET) + ["transcript_ablation"]
     missense_csqs = [
         "missense_variant",
         "inframe_insertion",
