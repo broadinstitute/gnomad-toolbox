@@ -1,9 +1,11 @@
 """Functions to filter the gnomAD pext HTs."""
+
 from typing import Optional
 
 import hail as hl
 
 from gnomad_toolbox.filtering.variant import get_single_variant
+
 
 def get_pext_for_variant(
     variant: Optional[str] = None,
@@ -32,4 +34,13 @@ def get_pext_for_variant(
     :param kwargs: Additional arguments to pass to `_get_dataset`.
     :return: Table with the single variant.
     """
-    return get_single_variant(variant=variant, contig=contig, position=position, ref=ref, alt=alt, dataset="pext", data_type="annotation_level", **kwargs)
+    return get_single_variant(
+        variant=variant,
+        contig=contig,
+        position=position,
+        ref=ref,
+        alt=alt,
+        dataset="pext",
+        data_type="annotation_level",
+        **kwargs,
+    )
