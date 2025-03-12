@@ -17,6 +17,7 @@ def get_single_variant(
     position: Optional[int] = None,
     ref: Optional[str] = None,
     alt: Optional[str] = None,
+    dataset: Optional[str] = "variant",
     **kwargs,
 ) -> hl.Table:
     """
@@ -45,7 +46,7 @@ def get_single_variant(
         )
 
     # Load the Hail Table if not provided
-    ht = _get_dataset(dataset="variant", **kwargs)
+    ht = _get_dataset(dataset=dataset, **kwargs)
 
     # Determine the reference genome build for the ht.
     build = get_reference_genome(ht.locus).name
