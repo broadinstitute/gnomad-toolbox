@@ -16,13 +16,12 @@ def get_pext_for_variant(
     **kwargs,
 ) -> hl.Table:
     """
-    Get pext score for a single variant from the gnomAD HT.
+    Get annotation-level pext score for a single variant from the gnomAD HT.
 
     .. note::
 
-        One of `variant` or all of `contig`, `position`, `ref`, and `alt` must be
-        provided. If `variant` is provided, `contig`, `position`, `ref`, and `alt` are
-        ignored.
+        The annotation-level pext score only sums the expression of transcripts on which a variant has a given annotation.
+        For more information, please see https://gnomad.broadinstitute.org/help/pext.
 
     :param variant: Variant string in the format "chr12-235245-A-C" or
         "chr12:235245:A:C". If provided, `contig`, `position`, `ref`, and `alt` are
