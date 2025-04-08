@@ -167,15 +167,15 @@ def get_age_distribution(
     :param kwargs: Additional arguments to pass to `_get_dataset`.
     :return: Table with the age distribution of the variant.
     """
-    # Load the Hail Table if not provided
+    # Load the Hail Table if not provided.
     ht = get_single_variant(variant, contig, position, ref, alt, **kwargs)
 
-    # Age distribution is stored in different structure in different releases
-    # Check to see if 'histograms' annotation exists (structure for v4)
+    # Age distribution is stored in different structure in different releases.
+    # Check to see if 'histograms' annotation exists (structure for v4).
     if "histograms" in ht.row:
         ht = ht.select(age_distributions=ht.histograms.age_hists)
     elif "exomes" in ht.row and "genomes" in ht.row:
-        # If 'histograms' annotation does not exist, check `data_type`
+        # If 'histograms' annotation does not exist, check `data_type`.
         ht = ht.select(
             exomes_age_distributions=ht.exomes.histograms.age_hists,
             genomes_age_distributions=ht.genomes.histograms.age_hists,
