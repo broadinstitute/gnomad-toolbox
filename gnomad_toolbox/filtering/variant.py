@@ -144,3 +144,48 @@ def filter_by_gene_symbol(gene: str, exon_padding_bp: int = 75, **kwargs) -> hl.
     )
 
     return ht
+
+
+def get_age_distribution(
+    variant: Optional[str] = None,
+    contig: Optional[str] = None,
+    position: Optional[int] = None,
+    ref: Optional[str] = None,
+    alt: Optional[str] = None,
+    **kwargs,
+) -> hl.Table:
+    """
+    Get the age distribution of a variant.
+
+    :param variant: Variant string in the format "chr12-235245-A-C" or
+        "chr12:235245:A:C". If provided, `contig`, `position`, `ref`, and `alt` are
+        ignored.
+    :param contig: Chromosome of the variant. Required if `variant` is not provided.
+    :param position: Variant position. Required if `variant` is not provided.
+    :param ref: Reference allele. Required if `variant` is not provided.
+    :param alt: Alternate allele. Required if `variant` is not provided.
+    :param kwargs: Additional arguments to pass to `_get_dataset`.
+    :return: Table with the age distribution of the variant.
+    """
+    # Load the Hail Table if not provided
+    ht = get_single_variant(variant, contig, position, ref, alt, **kwargs)
+
+    # Age distribution is stored in different structure in different releases
+    # Check to see if 'histograms' annotation exists (structure for v4)
+    if "annotations" in ht.row:
+        if "histograms" in ht.row.annotations:
+            ht = ht.select(age_distribution=ht.row.annotations.histograms.age_hists)
+        else:
+            # If 'histograms' annotation does not exist, check `data_type`
+            if "exomes" in ht.row and "genomes" in ht.row:
+                ht = ht.select(
+                    exomes_age_distribution=ht.exomes.histograms.age_hists,
+                    genomes_age_distribution=ht.genomes.histograms.age_hists,
+                )
+    else:
+        raise ValueError(
+            "The age distribution is not available for this dataset. Please check the "
+            "selected dataset and try again."
+        )
+
+    return ht
