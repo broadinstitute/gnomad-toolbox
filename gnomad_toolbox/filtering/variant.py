@@ -172,16 +172,14 @@ def get_age_distribution(
 
     # Age distribution is stored in different structure in different releases
     # Check to see if 'histograms' annotation exists (structure for v4)
-    if "annotations" in ht.row:
-        if "histograms" in ht.row.annotations:
-            ht = ht.select(age_distribution=ht.row.annotations.histograms.age_hists)
-        else:
-            # If 'histograms' annotation does not exist, check `data_type`
-            if "exomes" in ht.row and "genomes" in ht.row:
-                ht = ht.select(
-                    exomes_age_distribution=ht.exomes.histograms.age_hists,
-                    genomes_age_distribution=ht.genomes.histograms.age_hists,
-                )
+    if "histograms" in ht.row:
+        ht = ht.select(age_distributions=ht.histograms.age_hists)
+    elif "exomes" in ht.row and "genomes" in ht.row:
+        # If 'histograms' annotation does not exist, check `data_type`
+        ht = ht.select(
+            exomes_age_distributions=ht.exomes.histograms.age_hists,
+            genomes_age_distributions=ht.genomes.histograms.age_hists,
+        )
     else:
         raise ValueError(
             "The age distribution is not available for this dataset. Please check the "
