@@ -59,19 +59,18 @@ Before installing the toolbox, ensure the following:
     - For Linux, use `apt-get` or `yum` to install OpenJDK 11.
     - For macOS, [Hail recommends](https://hail.is/docs/0.2/install/macosx.html) using [Homebrew](https://brew.sh/):
       ```commandline
-      brew tap homebrew/cask-versions
-      brew install --cask temurin8
+      brew install temurin@11
       ```
-      or using a packaged installation from [Azul](https://www.azul.com/downloads/?version=java-11-lts&os=macos&package=jdk&show-old-builds=true).
+      or using a packaged installation from [Temurin](https://adoptium.net/temurin/releases/?os=mac&arch=arm&version=11).
       > Ensure you choose a Java installation that matches your system architecture (found in **Apple Menu > About This Mac**).
       > - For Apple M1/M2 chips, select an **arm64** Java package.
       > - For Intel-based Macs, choose an **x86_64** Java package.
       >
-      > You may also need to set the `JAVA_HOME` environment variable to the path of the installed Java version. For example:
-      > ```commandline
-      > export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-11.jdk/Contents/Home
-      > export PATH=$JAVA_HOME/bin:$PATH
-      > ```
+- You may also need to set the `JAVA_HOME` environment variable to the path of the installed Java version. For example:
+   ```commandline
+      export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-11.jdk/Contents/Home
+      export PATH=$JAVA_HOME/bin:$PATH
+   ```
 
 ### Install Miniconda
 
@@ -111,7 +110,7 @@ conda activate gnomad-toolbox
 
 ### Verify the Installation
 
-Start a Python shell and ensure that Hail and the gnomAD Toolbox are set up correctly:
+Start a Python shell (`python`) or Juypter environment (lab or notebook) and ensure that Hail and the gnomAD Toolbox are set up correctly:
 ```python
 import hail as hl
 import gnomad_toolbox
