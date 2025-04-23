@@ -59,10 +59,9 @@ Before installing the toolbox, ensure the following:
     - For Linux, use `apt-get` or `yum` to install OpenJDK 11.
     - For macOS, [Hail recommends](https://hail.is/docs/0.2/install/macosx.html) using [Homebrew](https://brew.sh/):
       ```commandline
-      brew tap homebrew/cask-versions
-      brew install --cask temurin8
+      brew install temurin@11
       ```
-      or using a packaged installation from [Azul](https://www.azul.com/downloads/?version=java-11-lts&os=macos&package=jdk&show-old-builds=true).
+      or using a packaged installation from [Temurin](https://adoptium.net/temurin/releases/?os=mac&arch=arm&version=11).
       > Ensure you choose a Java installation that matches your system architecture (found in **Apple Menu > About This Mac**).
       > - For Apple M1/M2 chips, select an **arm64** Java package.
       > - For Intel-based Macs, choose an **x86_64** Java package.
