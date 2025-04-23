@@ -66,11 +66,11 @@ Before installing the toolbox, ensure the following:
       > - For Apple M1/M2 chips, select an **arm64** Java package.
       > - For Intel-based Macs, choose an **x86_64** Java package.
       >
-      > You may also need to set the `JAVA_HOME` environment variable to the path of the installed Java version. For example:
-      > ```commandline
-      > export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-11.jdk/Contents/Home
-      > export PATH=$JAVA_HOME/bin:$PATH
-      > ```
+- You may also need to set the `JAVA_HOME` environment variable to the path of the installed Java version. For example:
+   ```commandline
+      export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-11.jdk/Contents/Home
+      export PATH=$JAVA_HOME/bin:$PATH
+   ```
 
 ### Install Miniconda
 
