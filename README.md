@@ -110,7 +110,7 @@ conda activate gnomad-toolbox
 
 ### Verify the Installation
 
-Start a Python shell and ensure that Hail and the gnomAD Toolbox are set up correctly:
+Start a Python shell (`python`) or Juypter environment (lab or notebook) and ensure that Hail and the gnomAD Toolbox are set up correctly:
 ```python
 import hail as hl
 import gnomad_toolbox
