@@ -32,7 +32,7 @@ def _import_clinvar_vcf(
         "path": wget.download(CLINVAR_FTP_URL[build], out=clinvar_download_path),
         "force_bgz": True,
         "min_partitions": 100,
-        "reference_genome": build
+        "reference_genome": build,
         "skip_invalid_loci": True,
     }
 
