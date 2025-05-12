@@ -1,9 +1,11 @@
 """Functions to import non-gnomAD reference data."""
 
-import wget
-
-from gnomad.resources.resource_utils import import_sites_vcf, NO_CHR_TO_CHR_CONTIG_RECODING
 import hail as hl
+import wget
+from gnomad.resources.resource_utils import (
+    NO_CHR_TO_CHR_CONTIG_RECODING,
+    import_sites_vcf,
+)
 
 CLINVAR_FTP_URL = {
     "GRCh37": "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/weekly/clinvar.vcf.gz",
@@ -12,6 +14,7 @@ CLINVAR_FTP_URL = {
 """
 Path to the latest weekly ClinVar VCF release for GRCh37 and GRCh38.
 """
+
 
 def _import_clinvar_vcf(
     build: str,
@@ -28,7 +31,7 @@ def _import_clinvar_vcf(
     :param overwrite: If True, overwrite existing ClinVar Hail Table.
     :return: Hail Table with ClinVar data.
     """
-    import_args={
+    import_args = {
         "path": wget.download(CLINVAR_FTP_URL[build], out=clinvar_download_path),
         "force_bgz": True,
         "min_partitions": 100,
