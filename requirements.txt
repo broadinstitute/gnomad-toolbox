@@ -7,3 +7,4 @@ jupyterlab
 nodejs
 npm
 jupyter-server<2.0.0
+wget
