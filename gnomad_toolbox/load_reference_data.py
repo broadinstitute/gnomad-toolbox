@@ -1,7 +1,7 @@
 """Functions to import non-gnomAD reference data."""
 
 import hail as hl
-import wget
+import requests
 from gnomad.resources.resource_utils import (
     NO_CHR_TO_CHR_CONTIG_RECODING,
     import_sites_vcf,
