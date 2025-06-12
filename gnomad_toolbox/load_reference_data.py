@@ -31,11 +31,10 @@ def _import_clinvar_vcf(
     :param overwrite: If True, overwrite existing ClinVar Hail Table.
     :return: Hail Table with ClinVar data.
     """
-   
     response = requests.get(CLINVAR_FTP_URL[build], stream=True)
-    response.raise_for_status()  
-    
-    with open(clinvar_download_path, 'wb') as f:
+    response.raise_for_status()
+
+    with open(clinvar_download_path, "wb") as f:
         for chunk in response.iter_content(chunk_size=8192):
             f.write(chunk)
     import_args = {
