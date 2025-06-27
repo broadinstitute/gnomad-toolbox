@@ -1,7 +1,7 @@
 """Tests for ClinVar loading functionality."""
 
-import pytest
 import hail as hl
+import pytest
 
 from gnomad_toolbox.load_reference_data import _load_clinvar_resource
 

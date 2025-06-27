@@ -1,7 +1,7 @@
 """Tests for ClinVar filtering functionality."""
 
-import pytest
 import hail as hl
+import pytest
 
 from gnomad_toolbox.filtering.clinvar import filter_variants_by_clinvar
 

@@ -1,7 +1,7 @@
 """Pytest configuration for gnomad-toolbox tests."""
 
-import pytest
 import hail as hl
+import pytest
 
 
 @pytest.fixture(scope="session", autouse=True)
