@@ -86,10 +86,9 @@ def filter_variants_by_clinvar(
         )
 
     # Filter by AF thresholds.
-    af_expr = ht.freq[0].AF if "freq" in ht.row else ht.af[0].AF
     if min_af_threshold is not None:
-        ht = ht.filter(af_expr > min_af_threshold)
-    ht = ht.filter(af_expr <= max_af_threshold)
+        ht = ht.filter(ht.freq[0].AF < min_af_threshold)
+    ht = ht.filter(ht.freq[0].AF >= max_af_threshold)
 
     if download_clinvar:
         # Import ClinVar data.
