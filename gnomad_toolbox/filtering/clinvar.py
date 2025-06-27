@@ -15,8 +15,8 @@ from gnomad_toolbox.load_reference_data import (
 
 
 def filter_variants_by_clinvar(
-    max_af_threshold: float = 0.01,
-    min_af_threshold: Optional[float] = None,
+    min_af_threshold: float = 0.0,
+    max_af_threshold: Optional[float] = None,
     download_clinvar: bool = False,
     genes: Optional[Union[str, List[str]]] = None,
     intervals: Optional[Union[str, List[str], hl.Interval, List[hl.Interval]]] = None,
@@ -42,9 +42,9 @@ def filter_variants_by_clinvar(
         then join with ClinVar data and filter to retain only variants with the
         specified ClinVar clinical significances.
 
-    :param max_af_threshold: Maximum allele frequency threshold. Default is 0.01.
-    :param min_af_threshold: Minimum allele frequency threshold. If provided, variants
-        with allele frequencies below this threshold will be excluded.
+    :param min_af_threshold: Minimum allele frequency threshold. Function will keep all variants above this threshold. Default is 0.0.
+    :param max_af_threshold: Maximum allele frequency threshold. If provided, variants
+        with allele frequencies at or above this threshold will be excluded.
     :param download_clinvar: If True, download latest ClinVar VCF. If False, use gnomAD ClinVar resource from gnomad_methods.
         Default is False.
     :param genes: Single gene name or list of gene names to filter by. If provided,
@@ -86,9 +86,16 @@ def filter_variants_by_clinvar(
         )
 
     # Filter by AF thresholds.
-    if min_af_threshold is not None:
-        ht = ht.filter(ht.freq[0].AF < min_af_threshold)
-    ht = ht.filter(ht.freq[0].AF >= max_af_threshold)
+    # If both thresholds are provided, filter to variants between the two thresholds
+    # (inclusive of the lower threshold and exclusive of the upper threshold).
+    # If only the lower threshold is provided, filter to variants with AF >=
+    # the lower threshold.
+    if max_af_threshold is not None:
+        ht = ht.filter(
+            (ht.freq[0].AF >= min_af_threshold) & (ht.freq[0].AF < max_af_threshold)
+        )
+    else:
+        ht = ht.filter(ht.freq[0].AF >= min_af_threshold)
 
     if download_clinvar:
         # Import ClinVar data.
