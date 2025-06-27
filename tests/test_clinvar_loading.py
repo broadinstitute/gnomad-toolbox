@@ -14,7 +14,6 @@ class TestClinVarLoading:
         with pytest.raises(ValueError, match="Unsupported reference genome build"):
             _load_clinvar_resource("invalid_build")
 
-
     @pytest.mark.parametrize("build", ["GRCh37", "GRCh38"])
     def test_clinvar_resource_basic_properties(self, build: str) -> None:
         """Test basic properties of ClinVar resources for both builds."""

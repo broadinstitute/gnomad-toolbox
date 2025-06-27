@@ -29,7 +29,9 @@ class TestClinVarFiltering:
             # Check that clinvar annotation has expected fields.
             clinvar_fields = ["CLNSIG", "CLNREVSTAT", "CLNDN", "CLNDISDB"]
             for field in clinvar_fields:
-                assert field in result.clinvar, f"Expected field {field} in clinvar annotation"
+                assert (
+                    field in result.clinvar
+                ), f"Expected field {field} in clinvar annotation"
 
     def test_filter_variants_by_clinvar_with_genes(self) -> None:
         """Test filter_variants_by_clinvar with gene filtering."""
@@ -90,7 +92,10 @@ class TestClinVarFiltering:
 
     def test_filter_variants_by_clinvar_missing_parameters(self) -> None:
         """Test that filter_variants_by_clinvar raises error with missing parameters."""
-        with pytest.raises(ValueError, match="Must provide either genes, intervals, or contig/start/end parameters"):
+        with pytest.raises(
+            ValueError,
+            match="Must provide either genes, intervals, or contig/start/end parameters",
+        ):
             filter_variants_by_clinvar(
                 max_af_threshold=0.01,
                 download_clinvar=False,
