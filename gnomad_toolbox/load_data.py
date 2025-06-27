@@ -112,6 +112,13 @@ SUPPORTED_REFERENCE_DATA = {
             "v39": {"reference_genome": "GRCh38"},
         },
     },
+    "clinvar": {
+        "resource": "clinvar",
+        "versions": {
+            "grch37": {"reference_genome": "GRCh37"},
+            "grch38": {"reference_genome": "GRCh38"},
+        },
+    },
 }
 
 
