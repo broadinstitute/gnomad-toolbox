@@ -108,8 +108,11 @@ def filter_variants_by_clinvar(
         clinvar=clinvar_ht[ht.key].select("CLNSIG", "CLNREVSTAT", "CLNDN", "CLNDISDB")
     )
 
-    # Filter to specified ClinVar significances.
-    clinvar_filter = hl.literal(clinvar_significances).contains(ht.clinvar.CLNSIG)
+    # Filter to specified ClinVar significances (case-insensitive).
+    clinvar_filter = hl.any(
+        lambda sig: hl.literal(clinvar_significances).contains(hl.str(sig).lower()),
+        ht.clinvar.CLNSIG,
+    )
     ht = ht.filter(clinvar_filter)
 
     return ht
