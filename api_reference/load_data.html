@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gnomad_toolbox.load_data &mdash; gnomad_toolbox main documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gnomad_toolbox.load_reference_data" href="load_reference_data.html" />
+    <link rel="prev" title="gnomad_toolbox.filtering.vep" href="filtering/vep.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            gnomad_toolbox
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="analysis/index.html">analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filtering/index.html">filtering</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">load_data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-functions">Module Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#gnomad_toolbox.load_data.GnomADSession"><code class="docutils literal notranslate"><span class="pre">GnomADSession</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gnomad_toolbox.load_data.get_gnomad_release"><code class="docutils literal notranslate"><span class="pre">get_gnomad_release()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gnomad_toolbox.load_data.get_compatible_dataset_versions"><code class="docutils literal notranslate"><span class="pre">get_compatible_dataset_versions()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="load_reference_data.html">load_reference_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts.html">scripts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/broadinstitute/gnomad-toolbox/tags">Change Log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">gnomad_toolbox</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">gnomad_toolbox</a></li>
+      <li class="breadcrumb-item active">gnomad_toolbox.load_data</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api_reference/load_data.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="gnomad-toolbox-load-data">
+<h1>gnomad_toolbox.load_data<a class="headerlink" href="#gnomad-toolbox-load-data" title="Permalink to this heading"></a></h1>
+<p>Functions to import gnomAD data.</p>
+<section id="module-functions">
+<h2>Module Functions<a class="headerlink" href="#module-functions" title="Permalink to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gnomad_toolbox.load_data.GnomADSession" title="gnomad_toolbox.load_data.GnomADSession"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gnomad_toolbox.load_data.GnomADSession</span></code></a>()</p></td>
+<td><p>Class to manage the default data type and version for a gnomAD session.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gnomad_toolbox.load_data.get_gnomad_release" title="gnomad_toolbox.load_data.get_gnomad_release"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gnomad_toolbox.load_data.get_gnomad_release</span></code></a>([...])</p></td>
+<td><p>Get gnomAD HT by dataset, data type, and version.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gnomad_toolbox.load_data.get_compatible_dataset_versions" title="gnomad_toolbox.load_data.get_compatible_dataset_versions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gnomad_toolbox.load_data.get_compatible_dataset_versions</span></code></a>(dataset)</p></td>
+<td><p>Get the compatible version of another datasets for a given gnomAD variant data version.</p></td>
+</tr>
+</tbody>
+</table>
+<span class="target" id="module-gnomad_toolbox.load_data"></span><p>Functions to import gnomAD data.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="gnomad_toolbox.load_data.GnomADSession">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gnomad_toolbox.load_data.</span></span><span class="sig-name descname"><span class="pre">GnomADSession</span></span><a class="reference internal" href="../_modules/gnomad_toolbox/load_data.html#GnomADSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gnomad_toolbox.load_data.GnomADSession" title="Permalink to this definition"></a></dt>
+<dd><p>Class to manage the default data type and version for a gnomAD session.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="gnomad_toolbox.load_data.GnomADSession.set_default_data">
+<span class="sig-name descname"><span class="pre">set_default_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gnomad_toolbox/load_data.html#GnomADSession.set_default_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gnomad_toolbox.load_data.GnomADSession.set_default_data" title="Permalink to this definition"></a></dt>
+<dd><p>Set default data type and version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_type</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Data type (exomes, genomes, or joint).</p></li>
+<li><p><strong>version</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – gnomAD version.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gnomad_toolbox.load_data.get_gnomad_release">
+<span class="sig-prename descclassname"><span class="pre">gnomad_toolbox.load_data.</span></span><span class="sig-name descname"><span class="pre">get_gnomad_release</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'variant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gnomad_toolbox/load_data.html#get_gnomad_release"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gnomad_toolbox.load_data.get_gnomad_release" title="Permalink to this definition"></a></dt>
+<dd><p>Get gnomAD HT by dataset, data type, and version.</p>
+<p>Not all combinations of dataset, data type, and version are available and/or
+supported by the toolbox. The table below shows what is supported.</p>
+<table class="docutils align-default" id="id1">
+<caption><span class="caption-text">Available versions for each dataset and data type are (as of 2025-1-13)</span><a class="headerlink" href="#id1" title="Permalink to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Genome Build</p></th>
+<th class="head"><p>Dataset</p></th>
+<th class="head"><p>Version</p></th>
+<th class="head"><p>Data Types</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td rowspan="6"><p>GRCh37</p></td>
+<td><p>variant</p></td>
+<td><p>2.1.1</p></td>
+<td><p>exomes, genomes</p></td>
+</tr>
+<tr class="row-odd"><td><p>coverage</p></td>
+<td><p>2.1</p></td>
+<td><p>exomes, genomes</p></td>
+</tr>
+<tr class="row-even"><td><p>constraint</p></td>
+<td><p>2.1.1</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td rowspan="2"><p>pext</p></td>
+<td rowspan="2"><p>v7</p></td>
+<td rowspan="2"><p>base_level, annotation_level</p></td>
+</tr>
+<tr class="row-even"></tr>
+<tr class="row-odd"><td><p>liftover</p></td>
+<td><p>2.1.1</p></td>
+<td><p>exomes, genomes</p></td>
+</tr>
+<tr class="row-even"><td rowspan="6"><p>GRCh38</p></td>
+<td><p>variant</p></td>
+<td><p>4.1</p></td>
+<td><p>exomes, genomes, joint</p></td>
+</tr>
+<tr class="row-odd"><td><p>all_sites_an</p></td>
+<td><p>4.1</p></td>
+<td><p>exomes, genomes</p></td>
+</tr>
+<tr class="row-even"><td><p>browser</p></td>
+<td><p>4.1</p></td>
+<td><p>N/A (joint, but doesn’t need
+to be specified)</p></td>
+</tr>
+<tr class="row-odd"><td><p>coverage</p></td>
+<td><p>3.0.1</p></td>
+<td><p>genomes</p></td>
+</tr>
+<tr class="row-even"><td><p>constraint</p></td>
+<td><p>4.1</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>pext</p></td>
+<td><p>v10</p></td>
+<td><p>base_level, annotation_level</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Dataset type. One of “variant”, “coverage”, “all_sites_an”,
+“constraint”, “liftover”, “pext”, “browser”. Default is “variant”.</p></li>
+<li><p><strong>data_type</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Data type. One of “exomes”, “genomes”, “joint” for all datasets
+except “pext” where it is one of “base_level”, “annotation_level”. Default is
+the current session data type.</p></li>
+<li><p><strong>version</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – gnomAD dataset version. Default is the current session version.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://hail.is/docs/0.2/hail.Table.html#hail.Table" title="(in Hail v0.2.135)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Table</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Hail Table for requested dataset, data type, and version.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gnomad_toolbox.load_data.get_compatible_dataset_versions">
+<span class="sig-prename descclassname"><span class="pre">gnomad_toolbox.load_data.</span></span><span class="sig-name descname"><span class="pre">get_compatible_dataset_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variant_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gnomad_toolbox/load_data.html#get_compatible_dataset_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gnomad_toolbox.load_data.get_compatible_dataset_versions" title="Permalink to this definition"></a></dt>
+<dd><p>Get the compatible version of another datasets for a given gnomAD variant data version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Dataset to get the compatible version for.</p></li>
+<li><p><strong>variant_version</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Optional gnomAD variant data version. If not provided, the
+current session version is used.</p></li>
+<li><p><strong>data_type</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Optional data type for the dataset if applicable.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Compatible version of the dataset for the given variant version.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="filtering/vep.html" class="btn btn-neutral float-left" title="gnomad_toolbox.filtering.vep" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="load_reference_data.html" class="btn btn-neutral float-right" title="gnomad_toolbox.load_reference_data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

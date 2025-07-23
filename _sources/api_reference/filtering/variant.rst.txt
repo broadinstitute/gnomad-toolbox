@@ -1,0 +1,14 @@
+gnomad_toolbox.filtering.variant
+================================
+
+Functions to filter the gnomAD sites HT to a specific set of variants.
+
+
+
+Module Functions
+****************
+
+.. automodulesummary:: gnomad_toolbox.filtering.variant
+
+.. automodule:: gnomad_toolbox.filtering.variant
+    :exclude-members: get_script_argument_parser

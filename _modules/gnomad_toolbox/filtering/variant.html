@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gnomad_toolbox.filtering.variant &mdash; gnomad_toolbox main documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/theme_overrides.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            gnomad_toolbox
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/broadinstitute/gnomad-toolbox/tags">Change Log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">gnomad_toolbox</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gnomad_toolbox.filtering.variant</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gnomad_toolbox.filtering.variant</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Functions to filter the gnomAD sites HT to a specific set of variants.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">hail</span> <span class="k">as</span> <span class="nn">hl</span>
+<span class="kn">from</span> <span class="nn">gnomad.utils.filtering</span> <span class="kn">import</span> <span class="n">filter_by_intervals</span> <span class="k">as</span> <span class="n">interval_filter</span>
+<span class="kn">from</span> <span class="nn">gnomad.utils.filtering</span> <span class="kn">import</span> <span class="n">filter_gencode_ht</span>
+<span class="kn">from</span> <span class="nn">gnomad.utils.parse</span> <span class="kn">import</span> <span class="n">parse_variant</span>
+<span class="kn">from</span> <span class="nn">gnomad.utils.reference_genome</span> <span class="kn">import</span> <span class="n">get_reference_genome</span>
+
+<span class="kn">from</span> <span class="nn">gnomad_toolbox.load_data</span> <span class="kn">import</span> <span class="n">_get_dataset</span>
+
+
+<div class="viewcode-block" id="get_single_variant"><a class="viewcode-back" href="../../../api_reference/filtering/variant.html#gnomad_toolbox.filtering.variant.get_single_variant">[docs]</a><span class="k">def</span> <span class="nf">get_single_variant</span><span class="p">(</span>
+    <span class="n">variant</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">contig</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">position</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ref</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">alt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;variant&quot;</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">hl</span><span class="o">.</span><span class="n">Table</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a single variant from the gnomAD HT.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        One of `variant` or all of `contig`, `position`, `ref`, and `alt` must be</span>
+<span class="sd">        provided. If `variant` is provided, `contig`, `position`, `ref`, and `alt` are</span>
+<span class="sd">        ignored.</span>
+
+<span class="sd">    :param variant: Variant string in the format &quot;chr12-235245-A-C&quot; or</span>
+<span class="sd">        &quot;chr12:235245:A:C&quot;. If provided, `contig`, `position`, `ref`, and `alt` are</span>
+<span class="sd">        ignored.</span>
+<span class="sd">    :param contig: Chromosome of the variant. Required if `variant` is not provided.</span>
+<span class="sd">    :param position: Variant position. Required if `variant` is not provided.</span>
+<span class="sd">    :param ref: Reference allele. Required if `variant` is not provided.</span>
+<span class="sd">    :param alt: Alternate allele. Required if `variant` is not provided.</span>
+<span class="sd">    :param kwargs: Additional arguments to pass to `_get_dataset`.</span>
+<span class="sd">    :return: Table with the single variant.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">variant</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">contig</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Either `variant` must be provided or all of `contig`, `position`, `ref`, &quot;</span>
+            <span class="s2">&quot;and `alt`.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Load the Hail Table if not provided</span>
+    <span class="n">ht</span> <span class="o">=</span> <span class="n">_get_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1"># Determine the reference genome build for the ht.</span>
+    <span class="n">build</span> <span class="o">=</span> <span class="n">get_reference_genome</span><span class="p">(</span><span class="n">ht</span><span class="o">.</span><span class="n">locus</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="c1"># Filter to the Locus of the variant of interest.</span>
+    <span class="n">variant</span> <span class="o">=</span> <span class="n">parse_variant</span><span class="p">(</span><span class="n">variant</span><span class="p">,</span> <span class="n">contig</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">,</span> <span class="n">build</span><span class="p">)</span>
+    <span class="n">ht</span> <span class="o">=</span> <span class="n">hl</span><span class="o">.</span><span class="n">filter_intervals</span><span class="p">(</span>
+        <span class="n">ht</span><span class="p">,</span> <span class="p">[</span><span class="n">hl</span><span class="o">.</span><span class="n">interval</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">locus</span><span class="p">,</span> <span class="n">variant</span><span class="o">.</span><span class="n">locus</span><span class="p">,</span> <span class="n">includes_end</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Filter to the variant of interest.</span>
+    <span class="n">ht</span> <span class="o">=</span> <span class="n">ht</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ht</span><span class="o">.</span><span class="n">alleles</span> <span class="o">==</span> <span class="n">variant</span><span class="o">.</span><span class="n">alleles</span><span class="p">)</span>
+
+    <span class="c1"># Check if the variant exists.</span>
+    <span class="k">if</span> <span class="n">ht</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">hl</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;No variant found at </span><span class="si">{</span><span class="n">hl</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">locus</span><span class="p">)</span><span class="si">}</span><span class="s2"> with alleles &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">hl</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">alleles</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ht</span></div>
+
+
+<div class="viewcode-block" id="filter_by_intervals"><a class="viewcode-back" href="../../../api_reference/filtering/variant.html#gnomad_toolbox.filtering.variant.filter_by_intervals">[docs]</a><span class="k">def</span> <span class="nf">filter_by_intervals</span><span class="p">(</span>
+    <span class="n">intervals</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+    <span class="n">padding_bp</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">hl</span><span class="o">.</span><span class="n">Table</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Filter variants by interval(s).</span>
+
+<span class="sd">    :param intervals: Interval string or list of interval strings. The interval string</span>
+<span class="sd">        format has to be &quot;contig:start-end&quot;, e.g.,&quot;1:1000-2000&quot; (GRCh37) or</span>
+<span class="sd">        &quot;chr1:1000-2000&quot; (GRCh38).</span>
+<span class="sd">    :param padding_bp: Number of base pairs to pad the intervals. Default is 0bp.</span>
+<span class="sd">    :param kwargs: Arguments to pass to `_get_dataset`.</span>
+<span class="sd">    :return: Table with variants in the interval(s).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Load the Hail Table if not provided.</span>
+    <span class="n">ht</span> <span class="o">=</span> <span class="n">_get_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;variant&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">interval_filter</span><span class="p">(</span>
+        <span class="n">ht</span><span class="p">,</span>
+        <span class="n">intervals</span><span class="p">,</span>
+        <span class="n">padding_bp</span><span class="o">=</span><span class="n">padding_bp</span><span class="p">,</span>
+        <span class="n">reference_genome</span><span class="o">=</span><span class="n">get_reference_genome</span><span class="p">(</span><span class="n">ht</span><span class="o">.</span><span class="n">locus</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="filter_by_gene_symbol"><a class="viewcode-back" href="../../../api_reference/filtering/variant.html#gnomad_toolbox.filtering.variant.filter_by_gene_symbol">[docs]</a><span class="k">def</span> <span class="nf">filter_by_gene_symbol</span><span class="p">(</span><span class="n">gene</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exon_padding_bp</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">75</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">hl</span><span class="o">.</span><span class="n">Table</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Filter variants by gene symbol.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">           This function is to match the number of variants that you will get in the</span>
+<span class="sd">           gnomAD browser when you search for a gene symbol. The gnomAD browser</span>
+<span class="sd">           filters to only variants located in or within 75 base pairs of CDS or</span>
+<span class="sd">           non-coding exons of a gene.</span>
+
+<span class="sd">    :param gene: Gencode gene symbol.</span>
+<span class="sd">    :param exon_padding_bp: Number of base pairs to pad the intervals. Default is 75bp.</span>
+<span class="sd">    :param kwargs: Arguments to pass to `_get_dataset`.</span>
+<span class="sd">    :return: Table with variants in the specified gene.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Load the Hail Table if not provided.</span>
+    <span class="n">ht</span> <span class="o">=</span> <span class="n">_get_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;variant&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1"># The gnomAD browser will display variants in CDS regions if present, otherwise UTR,</span>
+    <span class="c1"># and finally exons.</span>
+    <span class="n">feature_order</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CDS&quot;</span><span class="p">,</span> <span class="s2">&quot;UTR&quot;</span><span class="p">,</span> <span class="s2">&quot;exon&quot;</span><span class="p">]</span>
+    <span class="n">gencode_ht</span> <span class="o">=</span> <span class="n">filter_gencode_ht</span><span class="p">(</span>
+        <span class="n">reference_genome</span><span class="o">=</span><span class="n">get_reference_genome</span><span class="p">(</span><span class="n">ht</span><span class="o">.</span><span class="n">locus</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">feature</span><span class="o">=</span><span class="n">feature_order</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;gene&quot;</span><span class="p">],</span>
+        <span class="n">genes</span><span class="o">=</span><span class="n">gene</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># The 75bp padding only applies to variants in the specified gene interval</span>
+    <span class="c1"># (without padding), so we need to filter the gencode HT to only include the gene</span>
+    <span class="c1"># of interest first.</span>
+    <span class="n">ht</span> <span class="o">=</span> <span class="n">filter_by_intervals</span><span class="p">(</span>
+        <span class="n">gencode_ht</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">gencode_ht</span><span class="o">.</span><span class="n">feature</span> <span class="o">==</span> <span class="s2">&quot;gene&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">interval</span><span class="p">,</span> <span class="n">ht</span><span class="o">=</span><span class="n">ht</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">feature_order</span><span class="p">:</span>
+        <span class="n">filtered_gencode_ht</span> <span class="o">=</span> <span class="n">gencode_ht</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">gencode_ht</span><span class="o">.</span><span class="n">feature</span> <span class="o">==</span> <span class="n">f</span><span class="p">)</span>
+        <span class="n">filter_count</span> <span class="o">=</span> <span class="n">filtered_gencode_ht</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">filter_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">break</span>
+
+    <span class="k">if</span> <span class="n">filter_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No intervals match the gene symbol </span><span class="si">{</span><span class="n">gene</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">ht</span> <span class="o">=</span> <span class="n">filter_by_intervals</span><span class="p">(</span>
+        <span class="n">filtered_gencode_ht</span><span class="o">.</span><span class="n">interval</span><span class="p">,</span> <span class="n">ht</span><span class="o">=</span><span class="n">ht</span><span class="p">,</span> <span class="n">padding_bp</span><span class="o">=</span><span class="n">exon_padding_bp</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ht</span></div>
+
+
+<div class="viewcode-block" id="get_age_distribution"><a class="viewcode-back" href="../../../api_reference/filtering/variant.html#gnomad_toolbox.filtering.variant.get_age_distribution">[docs]</a><span class="k">def</span> <span class="nf">get_age_distribution</span><span class="p">(</span>
+    <span class="n">variant</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">contig</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">position</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ref</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">alt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">hl</span><span class="o">.</span><span class="n">Table</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the age distribution of a variant.</span>
+
+<span class="sd">    :param variant: Variant string in the format &quot;chr12-235245-A-C&quot; or</span>
+<span class="sd">        &quot;chr12:235245:A:C&quot;. If provided, `contig`, `position`, `ref`, and `alt` are</span>
+<span class="sd">        ignored.</span>
+<span class="sd">    :param contig: Chromosome of the variant. Required if `variant` is not provided.</span>
+<span class="sd">    :param position: Variant position. Required if `variant` is not provided.</span>
+<span class="sd">    :param ref: Reference allele. Required if `variant` is not provided.</span>
+<span class="sd">    :param alt: Alternate allele. Required if `variant` is not provided.</span>
+<span class="sd">    :param kwargs: Additional arguments to pass to `_get_dataset`.</span>
+<span class="sd">    :return: Table with the age distribution of the variant.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Load the Hail Table if not provided.</span>
+    <span class="n">ht</span> <span class="o">=</span> <span class="n">get_single_variant</span><span class="p">(</span><span class="n">variant</span><span class="p">,</span> <span class="n">contig</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1"># Age distribution is stored in different structure in different releases.</span>
+    <span class="c1"># Check to see if &#39;histograms&#39; annotation exists (structure for v4).</span>
+    <span class="k">if</span> <span class="s2">&quot;histograms&quot;</span> <span class="ow">in</span> <span class="n">ht</span><span class="o">.</span><span class="n">row</span><span class="p">:</span>
+        <span class="n">ht</span> <span class="o">=</span> <span class="n">ht</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">age_distributions</span><span class="o">=</span><span class="n">ht</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">age_hists</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="s2">&quot;exomes&quot;</span> <span class="ow">in</span> <span class="n">ht</span><span class="o">.</span><span class="n">row</span> <span class="ow">and</span> <span class="s2">&quot;genomes&quot;</span> <span class="ow">in</span> <span class="n">ht</span><span class="o">.</span><span class="n">row</span><span class="p">:</span>
+        <span class="c1"># If &#39;histograms&#39; annotation does not exist, check `data_type`.</span>
+        <span class="n">ht</span> <span class="o">=</span> <span class="n">ht</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
+            <span class="n">exomes_age_distributions</span><span class="o">=</span><span class="n">ht</span><span class="o">.</span><span class="n">exomes</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">age_hists</span><span class="p">,</span>
+            <span class="n">genomes_age_distributions</span><span class="o">=</span><span class="n">ht</span><span class="o">.</span><span class="n">genomes</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">age_hists</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;The age distribution is not available for this dataset. Please check the &quot;</span>
+            <span class="s2">&quot;selected dataset and try again.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ht</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
