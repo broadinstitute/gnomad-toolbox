@@ -1,4 +1,10 @@
-"""Functions to import non-gnomAD reference data."""
+"""
+Functions to import non-gnomAD reference data.
+
+This module provides functions to load and import various reference datasets.
+
+Currently, this module includes functions to load ClinVar data from gnomad_methods or by downloading from NCBI.
+"""
 
 import hail as hl
 import requests
@@ -14,6 +20,28 @@ CLINVAR_FTP_URL = {
 """
 Path to the latest weekly ClinVar VCF release for GRCh37 and GRCh38.
 """
+
+
+def _load_clinvar_resource(build: str) -> hl.Table:
+    """
+    Load ClinVar resource from gnomad_methods based on reference genome build.
+
+    :param build: Reference genome build ('GRCh37' or 'GRCh38').
+    :return: Hail Table with ClinVar data containing fields like `CLNSIG`, `CLNREVSTAT`,
+        `CLNDN`, `CLNDISDB`, etc.
+    """
+    if build == "GRCh37":
+        import gnomad.resources.grch37 as grch37_res
+
+        return grch37_res.reference_data.clinvar.ht()
+    elif build == "GRCh38":
+        import gnomad.resources.grch38 as grch38_res
+
+        return grch38_res.reference_data.clinvar.ht()
+    else:
+        raise ValueError(
+            f"Unsupported reference genome build: {build}. Must be 'GRCh37' or 'GRCh38'."
+        )
 
 
 def _import_clinvar_vcf(
