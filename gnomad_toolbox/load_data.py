@@ -48,6 +48,19 @@ VARIANT_DATA = {
             "browser": "4.1",
         },
     },
+    "4.1.1": {
+        "reference_genome": "GRCh38",
+        "data_types": ["exomes", "genomes", "joint"],
+        "dataset_versions": {
+            "vep": "105",
+            "gencode": "v39",
+            "coverage": {"exomes": "4.0", "genomes": "3.0.1"},
+            "all_sites_an": "4.1",
+            "constraint": "4.1.1",
+            "pext": "v10",
+            "browser": "4.1.1",
+        },
+    },
 }
 COVERAGE_DATA = {
     "2.1": {"reference_genome": "GRCh37", "data_types": ["exomes", "genomes"]},
@@ -74,6 +87,12 @@ CONSTRAINT_DATA = {
         "reference_genome": "GRCh38",
         "exome_coverage_field": "median_approx",
         "exome_coverage_cutoff": 30,
+        "af_cutoff": 0.001,
+    },
+    "4.1.1": {
+        "reference_genome": "GRCh38",
+        "exome_coverage_field": "AN_percent",
+        "exome_coverage_cutoff": 90,
         "af_cutoff": 0.001,
     },
 }
