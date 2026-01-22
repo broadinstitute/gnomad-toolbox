@@ -122,6 +122,7 @@ SUPPORTED_REFERENCE_DATA = {
         "versions": {
             "85": {"reference_genome": "GRCh37"},
             "105": {"reference_genome": "GRCh38"},
+            "115": {"reference_genome": "GRCh38"},
         },
     },
     "gencode": {
@@ -129,6 +130,7 @@ SUPPORTED_REFERENCE_DATA = {
         "versions": {
             "v19": {"reference_genome": "GRCh37"},
             "v39": {"reference_genome": "GRCh38"},
+            "v49": {"reference_genome": "GRCh38"},
         },
     },
 }
