@@ -104,7 +104,9 @@ def filter_by_consequence_category(
 
 
 def get_gene_intervals(
-    gene_symbol: str, gencode_version: Optional[str] = None
+    gene_symbol: str,
+    gencode_version: Optional[str] = None,
+    use_latest: bool = False,
 ) -> List[hl.utils.Interval]:
     """
     Get the GENCODE genomic intervals for a given gene symbol.
@@ -112,10 +114,13 @@ def get_gene_intervals(
     :param gene_symbol: Gene symbol.
     :param gencode_version: Optional GENCODE version. If not provided, uses the gencode
         version associated with the gnomAD session.
+    :param use_latest: If True, use the latest GENCODE version when multiple versions
+        are available (e.g., v47 instead of v39 for gnomAD v4.1.1). Only supported for
+        gnomAD v4.1.1. Default is False.
     :return: List of GENCODE intervals for the specified gene.
     """
     # Load the Hail Table if not provided.
-    ht = _get_dataset(dataset="gencode", version=gencode_version)
+    ht = _get_dataset(dataset="gencode", version=gencode_version, use_latest=use_latest)
     gene_symbol = gene_symbol.upper()
 
     intervals = filter_gencode_ht(gencode_ht=ht, feature="gene", genes=gene_symbol)
@@ -133,6 +138,7 @@ def filter_to_high_confidence_loftee(
     mane_select_only: bool = False,
     canonical_only: bool = False,
     version: Optional[str] = None,
+    use_latest: bool = False,
     **kwargs,
 ) -> hl.Table:
     """
@@ -146,6 +152,9 @@ def filter_to_high_confidence_loftee(
     :param canonical_only: Whether to include only canonical transcripts. Default is
         False.
     :param version: Optional version of the dataset to use.
+    :param use_latest: If True, use the latest GENCODE version when multiple versions
+        are available (e.g., v47 instead of v39 for gnomAD v4.1.1). Only supported for
+        gnomAD v4.1.1. Default is False.
     :param kwargs: Additional arguments to pass to `_get_dataset`.
     :return: Table with high-confidence LOFTEE variants.
     """
@@ -154,7 +163,9 @@ def filter_to_high_confidence_loftee(
     gene_symbol = gene_symbol.upper() if gene_symbol else None
 
     if gene_symbol:
-        gencode_version = get_compatible_dataset_versions("gencode", version)
+        gencode_version = get_compatible_dataset_versions(
+            "gencode", version, use_latest=use_latest
+        )
         ht = hl.filter_intervals(
             ht, get_gene_intervals(gene_symbol, gencode_version=gencode_version)
         )
