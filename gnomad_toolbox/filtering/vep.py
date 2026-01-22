@@ -115,7 +115,7 @@ def get_gene_intervals(
     :param gencode_version: Optional GENCODE version. If not provided, uses the gencode
         version associated with the gnomAD session.
     :param use_latest: If True, use the latest GENCODE version when multiple versions
-        are available (e.g., v47 instead of v39 for gnomAD v4.1.1). Only supported for
+        are available (e.g., v49 instead of v39 for gnomAD v4.1.1). Only supported for
         gnomAD v4.1.1. Default is False.
     :return: List of GENCODE intervals for the specified gene.
     """
@@ -153,7 +153,7 @@ def filter_to_high_confidence_loftee(
         False.
     :param version: Optional version of the dataset to use.
     :param use_latest: If True, use the latest GENCODE version when multiple versions
-        are available (e.g., v47 instead of v39 for gnomAD v4.1.1). Only supported for
+        are available (e.g., v49 instead of v39 for gnomAD v4.1.1). Only supported for
         gnomAD v4.1.1. Default is False.
     :param kwargs: Additional arguments to pass to `_get_dataset`.
     :return: Table with high-confidence LOFTEE variants.

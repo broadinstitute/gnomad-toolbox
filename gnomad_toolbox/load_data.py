@@ -209,7 +209,7 @@ def _get_dataset(
     :param use_latest: If True, use the latest version of the dataset when multiple
         versions are available. Currently only supported for VEP and GENCODE in gnomAD
         v4.1.1, where setting this to True returns VEP 115 (instead of 105) and GENCODE
-        v47 (instead of v39). Default is False (uses default version).
+        v49 (instead of v39). Default is False (uses default version).
     :return: Hail Table for requested dataset, data type, and version.
     """
     # If a pre-loaded Hail Table is provided, return it directly.
@@ -344,7 +344,7 @@ def get_gnomad_release(
     :param use_latest: If True, use the latest version of a reference dataset when
         multiple versions are available. Currently only supported for VEP and GENCODE
         in gnomAD v4.1.1, where setting this to True returns VEP 115 (instead of 105)
-        and GENCODE v47 (instead of v39). Default is False (uses default version).
+        and GENCODE v49 (instead of v39). Default is False (uses default version).
     :return: Hail Table for requested dataset, data type, and version.
     """
     return _get_dataset(
@@ -367,7 +367,7 @@ def get_compatible_dataset_versions(
     :param data_type: Optional data type for the dataset if applicable.
     :param use_latest: If True and the dataset has default/latest versions, return the
         latest version. Currently only supported for VEP and GENCODE in gnomAD v4.1.1,
-        where setting this to True returns VEP 115 (instead of 105) and GENCODE v47
+        where setting this to True returns VEP 115 (instead of 105) and GENCODE v49
         (instead of v39). Default is False (returns default version).
     :return: Compatible version of the dataset for the given variant version.
     """
