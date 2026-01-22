@@ -106,7 +106,10 @@ PEXT_DATA = {
     "v7": {"reference_genome": "GRCh37", "data_types": PEXT_DATA_TYPES},
     "v10": {"reference_genome": "GRCh38", "data_types": PEXT_DATA_TYPES},
 }
-BROWSER_DATA = {"4.1": {"reference_genome": "GRCh38"}}
+BROWSER_DATA = {
+    "4.1": {"reference_genome": "GRCh38"},
+    "4.1.1": {"reference_genome": "GRCh38"},
+}
 SUPPORTED_DATASETS = {
     "variant": {"resource": "public_release", "versions": VARIANT_DATA},
     "coverage": {"resource": "coverage", "versions": COVERAGE_DATA},
