@@ -52,7 +52,7 @@ VARIANT_DATA = {
         "reference_genome": "GRCh38",
         "data_types": ["exomes", "genomes"],
         "dataset_versions": {
-            "vep": "105",
+            "vep": {"default": "105", "latest": "115"},
             "gencode": "v39",
             "coverage": {"exomes": "4.0", "genomes": "3.0.1"},
             "all_sites_an": "4.1",
@@ -193,6 +193,7 @@ def _get_dataset(
     dataset: str = "variant",
     data_type: str = None,
     version: str = None,
+    use_latest: bool = False,
 ) -> hl.Table:
     """
     Get gnomAD HT using a Hail Table, specific parameters, or session defaults.
@@ -202,6 +203,10 @@ def _get_dataset(
         "gencode". Default is variant.
     :param data_type: Data type (exomes, genomes, or joint). Default is session value.
     :param version: gnomAD version. Default is session value.
+    :param use_latest: If True, use the latest version of the dataset when multiple
+        versions are available. Currently only relevant for VEP in gnomAD v4.1.1, where
+        setting this to True returns VEP 115 instead of VEP 105 (the default).
+        Default is False (uses default version).
     :return: Hail Table for requested dataset, data type, and version.
     """
     # If a pre-loaded Hail Table is provided, return it directly.
@@ -225,6 +230,9 @@ def _get_dataset(
         version = version or gnomad_session.version
     else:
         version = version or gnomad_session.compatible_datasets[dataset]
+        # Handle datasets with default/latest versions.
+        if isinstance(version, dict) and "default" in version:
+            version = version["latest"] if use_latest else version["default"]
 
     # Validate version.
     versions = dataset_info["versions"]
@@ -269,6 +277,7 @@ def get_gnomad_release(
     dataset: str = "variant",
     data_type: Optional[str] = None,
     version: Optional[str] = None,
+    use_latest: bool = False,
 ) -> hl.Table:
     """
     Get gnomAD HT by dataset, data type, and version.
@@ -312,13 +321,22 @@ def get_gnomad_release(
         except "pext" where it is one of "base_level", "annotation_level". Default is
         the current session data type.
     :param version: gnomAD dataset version. Default is the current session version.
+    :param use_latest: If True, use the latest version of a reference dataset when
+        multiple versions are available. Currently only relevant for VEP in gnomAD
+        v4.1.1, where setting this to True returns VEP 115 instead of VEP 105 (the
+        default). Default is False (uses default version).
     :return: Hail Table for requested dataset, data type, and version.
     """
-    return _get_dataset(dataset=dataset, data_type=data_type, version=version)
+    return _get_dataset(
+        dataset=dataset, data_type=data_type, version=version, use_latest=use_latest
+    )
 
 
 def get_compatible_dataset_versions(
-    dataset: str, variant_version: Optional[str] = None, data_type: Optional[str] = None
+    dataset: str,
+    variant_version: Optional[str] = None,
+    data_type: Optional[str] = None,
+    use_latest: bool = False,
 ) -> Union[str, dict]:
     """
     Get the compatible version of another datasets for a given gnomAD variant data version.
@@ -327,6 +345,10 @@ def get_compatible_dataset_versions(
     :param variant_version: Optional gnomAD variant data version. If not provided, the
         current session version is used.
     :param data_type: Optional data type for the dataset if applicable.
+    :param use_latest: If True and the dataset has default/latest versions, return the
+        latest version. Currently only relevant for VEP in gnomAD v4.1.1, where setting
+        this to True returns "115" instead of "105" (the default).
+        Default is False (returns default version).
     :return: Compatible version of the dataset for the given variant version.
     """
     # Get the dictionary of compatible versions for the given variant version or
@@ -346,6 +368,11 @@ def get_compatible_dataset_versions(
     # If the dataset has multiple data types and a data type is provided, return the
     # version for the data type.
     dataset_version = versions[dataset]
+
+    # Handle datasets with default/latest versions.
+    if isinstance(dataset_version, dict) and "default" in dataset_version:
+        return dataset_version["latest"] if use_latest else dataset_version["default"]
+
     if data_type and isinstance(dataset_version, dict):
         if data_type not in dataset_version:
             raise ValueError(
