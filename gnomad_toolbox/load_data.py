@@ -50,7 +50,7 @@ VARIANT_DATA = {
     },
     "4.1.1": {
         "reference_genome": "GRCh38",
-        "data_types": ["exomes", "genomes", "joint"],
+        "data_types": ["exomes", "genomes"],
         "dataset_versions": {
             "vep": "105",
             "gencode": "v39",
