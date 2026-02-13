@@ -107,6 +107,15 @@ conda activate gnomad-toolbox
 > conda install postgresql
 > ```
 
+### Install the Cloud Storage Connector
+The gnomAD Hail tables are stored in Google Cloud Storage, and in order to avoid downloading the entire dataset to your local machine,
+we recommend using the [Google Cloud Storage Connector](https://cloud.google.com/dataproc/docs/concepts/connectors/cloud-storage)
+to access the data.
+
+The easiest way to install the connector is to use the `install-gcs-connector` script provided by the Broad Institute:
+```commandline
+curl -sSL https://broad.io/install-gcs-connector | python3 - --auth-type UNAUTHENTICATED
+```
 
 ### Verify the Installation
 
@@ -153,16 +162,6 @@ However, running the gnomaAD Toolbox example notebooks can be done locally using
    ```
 
 To run the example notebooks locally, there are a few additional steps needed to set up your environment:
-
-### Install the Cloud Storage Connector
-The gnomAD Hail tables are stored in Google Cloud Storage, and in order to avoid downloading the entire dataset to your local machine,
-we recommend using the [Google Cloud Storage Connector](https://cloud.google.com/dataproc/docs/concepts/connectors/cloud-storage)
-to access the data.
-
-The easiest way to install the connector is to use the `install-gcs-connector` script provided by the Broad Institute:
-```commandline
-curl -sSL https://broad.io/install-gcs-connector | python3 - --auth-type UNAUTHENTICATED
-```
 
 ### Copy and Open the Notebooks
 
