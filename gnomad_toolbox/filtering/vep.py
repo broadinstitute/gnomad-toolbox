@@ -116,7 +116,7 @@ def get_gene_intervals(
         version associated with the gnomAD session.
     :param use_latest: If True, use the latest GENCODE version when multiple versions
         are available (e.g., v49 instead of v39 for gnomAD v4.1.1). Only supported for
-        gnomAD v4.1.1. Default is False.
+        versions starting at v4.1.1. Default is False.
     :return: List of GENCODE intervals for the specified gene.
     """
     # Load the Hail Table if not provided.
