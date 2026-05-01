@@ -244,8 +244,8 @@ def _get_dataset(
                 raise ValueError(
                     f"use_latest=True is not supported for {dataset} in gnomAD "
                     f"{gnomad_session.version}. The use_latest option is only available "
-                    f"for datasets with multiple versions (currently VEP and GENCODE in "
-                    f"v4.1.1)."
+                    f"for datasets with multiple versions (e.g., VEP and GENCODE in "
+                    f"gnomAD v4.1.1 and later)."
                 )
             version = version or compatible_version["latest"]
         elif has_latest:
@@ -344,8 +344,8 @@ def get_gnomad_release(
         the current session data type.
     :param version: gnomAD dataset version. Default is the current session version.
     :param use_latest: If True, use the latest version of a reference dataset when
-        multiple versions are available. Currently only supported for VEP and GENCODE
-        in gnomAD v4.1.1, where setting this to True returns VEP 115 (instead of 105)
+        multiple versions are available. Supported for VEP and GENCODE in gnomAD
+        v4.1.1 and later, where setting this to True returns VEP 115 (instead of 105)
         and GENCODE v49 (instead of v39). Default is False (uses default version).
     :return: Hail Table for requested dataset, data type, and version.
     """
@@ -368,7 +368,7 @@ def get_compatible_dataset_versions(
         current session version is used.
     :param data_type: Optional data type for the dataset if applicable.
     :param use_latest: If True and the dataset has default/latest versions, return the
-        latest version. Currently only supported for VEP and GENCODE in gnomAD v4.1.1,
+        latest version. Supported for VEP and GENCODE in gnomAD v4.1.1 and later,
         where setting this to True returns VEP 115 (instead of 105) and GENCODE v49
         (instead of v39). Default is False (returns default version).
     :return: Compatible version of the dataset for the given variant version.
@@ -400,7 +400,8 @@ def get_compatible_dataset_versions(
             raise ValueError(
                 f"use_latest=True is not supported for {dataset} in gnomAD "
                 f"{variant_version}. The use_latest option is only available for "
-                f"datasets with multiple versions (currently VEP and GENCODE in v4.1.1)."
+                f"datasets with multiple versions (e.g., VEP and GENCODE in gnomAD "
+                f"v4.1.1 and later)."
             )
         return dataset_version["latest"]
 
