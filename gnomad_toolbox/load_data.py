@@ -207,7 +207,7 @@ def _get_dataset(
     :param data_type: Data type (exomes, genomes, or joint). Default is session value.
     :param version: gnomAD version. Default is session value.
     :param use_latest: If True, use the latest version of the dataset when multiple
-        versions are available. Currently only supported for VEP and GENCODE in gnomAD
+        versions are available. Applies to VEP and GENCODE for versions starting at gnomAD
         v4.1.1, where setting this to True returns VEP 115 (instead of 105) and GENCODE
         v49 (instead of v39). Default is False (uses default version).
     :return: Hail Table for requested dataset, data type, and version.
