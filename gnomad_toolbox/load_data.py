@@ -232,10 +232,12 @@ def _get_dataset(
     if dataset == "variant":
         version = version or gnomad_session.version
     else:
-        compatible_version = gnomad_session.compatible_datasets[dataset]
+        compatible_version = gnomad_session.compatible_datasets.get(dataset)
         # Handle datasets with default/latest versions.
         has_latest = (
-            isinstance(compatible_version, dict) and "default" in compatible_version
+            compatible_version is not None
+            and isinstance(compatible_version, dict)
+            and "default" in compatible_version
         )
         if use_latest:
             if not has_latest:
@@ -248,7 +250,7 @@ def _get_dataset(
             version = version or compatible_version["latest"]
         elif has_latest:
             version = version or compatible_version["default"]
-        else:
+        elif compatible_version is not None:
             version = version or compatible_version
 
     # Validate version.
