@@ -152,7 +152,7 @@ class GnomADSession:
         :return: None.
         """
         self.data_type = "exomes"
-        self.version = "4.1"
+        self.version = "4.1.1"
         self.set_default_data()
 
     def set_default_data(
