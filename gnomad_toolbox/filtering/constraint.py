@@ -31,8 +31,8 @@ def get_observed_plofs_for_gene_constraint(
         - ≥ a specified coverage threshold (depends on the version)
 
     .. note::
-        This function uses the default GENCODE version for gnomAD v4.1.1,
-        as constraint metrics were only calculated using this version.
+        This function uses the default GENCODE version for versions starting with gnomAD v4.1.1,
+        as constraint metrics were only calculated using the default GENCODE version.
 
     :param gene_symbol: Gene symbol.
     :param version: Optional gnomAD dataset version. If not provided, uses the gnomAD
