@@ -1,0 +1,14 @@
+gnomad_toolbox.filtering.vep
+============================
+
+Functions to filter gnomAD sites HT by VEP annotations.
+
+
+
+Module Functions
+****************
+
+.. automodulesummary:: gnomad_toolbox.filtering.vep
+
+.. automodule:: gnomad_toolbox.filtering.vep
+    :exclude-members: get_script_argument_parser

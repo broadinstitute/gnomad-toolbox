@@ -1,0 +1,14 @@
+gnomad_toolbox.filtering.constraint
+===================================
+
+Functions to filter gnomAD sites HT by constraint metrics.
+
+
+
+Module Functions
+****************
+
+.. automodulesummary:: gnomad_toolbox.filtering.constraint
+
+.. automodule:: gnomad_toolbox.filtering.constraint
+    :exclude-members: get_script_argument_parser

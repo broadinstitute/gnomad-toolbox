@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gnomad_toolbox.filtering.vep &mdash; gnomad_toolbox main documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/theme_overrides.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            gnomad_toolbox
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/broadinstitute/gnomad-toolbox/tags">Change Log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">gnomad_toolbox</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gnomad_toolbox.filtering.vep</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gnomad_toolbox.filtering.vep</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Functions to filter gnomAD sites HT by VEP annotations.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">hail</span> <span class="k">as</span> <span class="nn">hl</span>
+<span class="kn">from</span> <span class="nn">gnomad.utils.filtering</span> <span class="kn">import</span> <span class="n">filter_gencode_ht</span>
+<span class="kn">from</span> <span class="nn">gnomad.utils.vep</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LOF_CSQ_SET</span><span class="p">,</span>
+    <span class="n">filter_vep_transcript_csqs</span><span class="p">,</span>
+    <span class="n">filter_vep_transcript_csqs_expr</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">gnomad_toolbox.load_data</span> <span class="kn">import</span> <span class="n">_get_dataset</span><span class="p">,</span> <span class="n">get_compatible_dataset_versions</span>
+
+
+<div class="viewcode-block" id="filter_by_consequence_category"><a class="viewcode-back" href="../../../api_reference/filtering/vep.html#gnomad_toolbox.filtering.vep.filter_by_consequence_category">[docs]</a><span class="k">def</span> <span class="nf">filter_by_consequence_category</span><span class="p">(</span>
+    <span class="n">plof</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">missense</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">synonymous</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">other</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">pass_filters</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">hl</span><span class="o">.</span><span class="n">Table</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Filter gnomAD variants based on VEP consequence.</span>
+
+<span class="sd">    https://gnomad.broadinstitute.org/help/consequence-category-filter</span>
+
+<span class="sd">    The [VEP](https://useast.ensembl.org/info/docs/tools/vep/index.html) consequences included in each category are:</span>
+
+<span class="sd">        pLoF:</span>
+
+<span class="sd">            - transcript_ablation</span>
+<span class="sd">            - splice_acceptor_variant</span>
+<span class="sd">            - splice_donor_variant</span>
+<span class="sd">            - stop_gained</span>
+<span class="sd">            - frameshift_variant</span>
+
+<span class="sd">        Missense / Inframe indel:</span>
+
+<span class="sd">            - stop_lost</span>
+<span class="sd">            - start_lost</span>
+<span class="sd">            - inframe_insertion</span>
+<span class="sd">            - inframe_deletion</span>
+<span class="sd">            - missense_variant</span>
+
+<span class="sd">        Synonymous:</span>
+
+<span class="sd">            - synonymous_variant</span>
+
+<span class="sd">        Other:</span>
+
+<span class="sd">            - All other consequences not included in the above categories.</span>
+
+<span class="sd">    :param plof: Whether to include pLoF variants.</span>
+<span class="sd">    :param missense: Whether to include missense variants.</span>
+<span class="sd">    :param synonymous: Whether to include synonymous variants.</span>
+<span class="sd">    :param other: Whether to include other variants.</span>
+<span class="sd">    :param pass_filters: Boolean if the variants pass the filters.</span>
+<span class="sd">    :param kwargs: Arguments to pass to `_get_dataset`.</span>
+<span class="sd">    :return: Table with variants with the specified consequences.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">([</span><span class="n">plof</span><span class="p">,</span> <span class="n">missense</span><span class="p">,</span> <span class="n">synonymous</span><span class="p">,</span> <span class="n">other</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;At least one of plof, missense, synonymous, or other must be True.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Load the Hail Table if not provided</span>
+    <span class="n">ht</span> <span class="o">=</span> <span class="n">_get_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;variant&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">lof_csqs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">LOF_CSQ_SET</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;transcript_ablation&quot;</span><span class="p">]</span>
+    <span class="n">missense_csqs</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;missense_variant&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;inframe_insertion&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;inframe_deletion&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;stop_lost&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;start_lost&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">synonymous_csqs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;synonymous_variant&quot;</span><span class="p">]</span>
+    <span class="n">other_csqs</span> <span class="o">=</span> <span class="n">lof_csqs</span> <span class="o">+</span> <span class="n">missense_csqs</span> <span class="o">+</span> <span class="n">synonymous_csqs</span>
+
+    <span class="n">csqs</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">lof_csqs</span> <span class="k">if</span> <span class="n">plof</span> <span class="k">else</span> <span class="p">[])</span>
+        <span class="o">+</span> <span class="p">(</span><span class="n">missense_csqs</span> <span class="k">if</span> <span class="n">missense</span> <span class="k">else</span> <span class="p">[])</span>
+        <span class="o">+</span> <span class="p">(</span><span class="n">synonymous_csqs</span> <span class="k">if</span> <span class="n">synonymous</span> <span class="k">else</span> <span class="p">[])</span>
+    <span class="p">)</span>
+
+    <span class="n">filter_expr</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">csqs</span><span class="p">:</span>
+        <span class="n">filter_expr</span> <span class="o">=</span> <span class="n">filter_vep_transcript_csqs_expr</span><span class="p">(</span><span class="n">ht</span><span class="o">.</span><span class="n">vep</span><span class="p">,</span> <span class="n">csqs</span><span class="o">=</span><span class="n">csqs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">other</span><span class="p">:</span>
+        <span class="n">other_expr</span> <span class="o">=</span> <span class="n">filter_vep_transcript_csqs_expr</span><span class="p">(</span>
+            <span class="n">ht</span><span class="o">.</span><span class="n">vep</span><span class="p">,</span> <span class="n">csqs</span><span class="o">=</span><span class="n">other_csqs</span><span class="p">,</span> <span class="n">keep_csqs</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="n">filter_expr</span> <span class="o">=</span> <span class="n">other_expr</span> <span class="k">if</span> <span class="n">filter_expr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">filter_expr</span> <span class="o">|</span> <span class="n">other_expr</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">pass_filters</span><span class="p">:</span>
+        <span class="n">pass_expr</span> <span class="o">=</span> <span class="n">hl</span><span class="o">.</span><span class="n">len</span><span class="p">(</span><span class="n">ht</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="n">filter_expr</span> <span class="o">=</span> <span class="n">pass_expr</span> <span class="k">if</span> <span class="n">filter_expr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">filter_expr</span> <span class="o">&amp;</span> <span class="n">pass_expr</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ht</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">filter_expr</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_gene_intervals"><a class="viewcode-back" href="../../../api_reference/filtering/vep.html#gnomad_toolbox.filtering.vep.get_gene_intervals">[docs]</a><span class="k">def</span> <span class="nf">get_gene_intervals</span><span class="p">(</span>
+    <span class="n">gene_symbol</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">gencode_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">hl</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">Interval</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the GENCODE genomic intervals for a given gene symbol.</span>
+
+<span class="sd">    :param gene_symbol: Gene symbol.</span>
+<span class="sd">    :param gencode_version: Optional GENCODE version. If not provided, uses the gencode</span>
+<span class="sd">        version associated with the gnomAD session.</span>
+<span class="sd">    :return: List of GENCODE intervals for the specified gene.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Load the Hail Table if not provided.</span>
+    <span class="n">ht</span> <span class="o">=</span> <span class="n">_get_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;gencode&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">gencode_version</span><span class="p">)</span>
+    <span class="n">gene_symbol</span> <span class="o">=</span> <span class="n">gene_symbol</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">filter_gencode_ht</span><span class="p">(</span><span class="n">gencode_ht</span><span class="o">=</span><span class="n">ht</span><span class="p">,</span> <span class="n">feature</span><span class="o">=</span><span class="s2">&quot;gene&quot;</span><span class="p">,</span> <span class="n">genes</span><span class="o">=</span><span class="n">gene_symbol</span><span class="p">)</span>
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">intervals</span><span class="o">.</span><span class="n">interval</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">intervals</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No interval found for gene: </span><span class="si">{</span><span class="n">gene_symbol</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">intervals</span></div>
+
+
+<div class="viewcode-block" id="filter_to_high_confidence_loftee"><a class="viewcode-back" href="../../../api_reference/filtering/vep.html#gnomad_toolbox.filtering.vep.filter_to_high_confidence_loftee">[docs]</a><span class="k">def</span> <span class="nf">filter_to_high_confidence_loftee</span><span class="p">(</span>
+    <span class="n">gene_symbol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">no_lof_flags</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">mane_select_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">canonical_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">hl</span><span class="o">.</span><span class="n">Table</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Filter gnomAD variants to high-confidence LOFTEE variants for a gene.</span>
+
+<span class="sd">    :param gene_symbol: Optional gene symbol to filter by.</span>
+<span class="sd">    :param no_lof_flags: Whether to exclude variants with LOFTEE flags. Default is</span>
+<span class="sd">        False.</span>
+<span class="sd">    :param mane_select_only: Whether to include only MANE Select transcripts. Default</span>
+<span class="sd">        is False.</span>
+<span class="sd">    :param canonical_only: Whether to include only canonical transcripts. Default is</span>
+<span class="sd">        False.</span>
+<span class="sd">    :param version: Optional version of the dataset to use.</span>
+<span class="sd">    :param kwargs: Additional arguments to pass to `_get_dataset`.</span>
+<span class="sd">    :return: Table with high-confidence LOFTEE variants.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Load the Hail Table if not provided.</span>
+    <span class="n">ht</span> <span class="o">=</span> <span class="n">_get_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;variant&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">gene_symbol</span> <span class="o">=</span> <span class="n">gene_symbol</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">if</span> <span class="n">gene_symbol</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">gene_symbol</span><span class="p">:</span>
+        <span class="n">gencode_version</span> <span class="o">=</span> <span class="n">get_compatible_dataset_versions</span><span class="p">(</span><span class="s2">&quot;gencode&quot;</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+        <span class="n">ht</span> <span class="o">=</span> <span class="n">hl</span><span class="o">.</span><span class="n">filter_intervals</span><span class="p">(</span>
+            <span class="n">ht</span><span class="p">,</span> <span class="n">get_gene_intervals</span><span class="p">(</span><span class="n">gene_symbol</span><span class="p">,</span> <span class="n">gencode_version</span><span class="o">=</span><span class="n">gencode_version</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">filter_vep_transcript_csqs</span><span class="p">(</span>
+        <span class="n">ht</span><span class="p">,</span>
+        <span class="n">synonymous</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">canonical</span><span class="o">=</span><span class="n">canonical_only</span><span class="p">,</span>
+        <span class="n">mane_select</span><span class="o">=</span><span class="n">mane_select_only</span><span class="p">,</span>
+        <span class="n">genes</span><span class="o">=</span><span class="p">[</span><span class="n">gene_symbol</span><span class="p">],</span>
+        <span class="n">match_by_gene_symbol</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">loftee_labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;HC&quot;</span><span class="p">],</span>
+        <span class="n">no_lof_flags</span><span class="o">=</span><span class="n">no_lof_flags</span><span class="p">,</span>
+    <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
