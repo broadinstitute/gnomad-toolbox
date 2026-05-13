@@ -37,7 +37,7 @@ VARIANT_DATA = {
     },
     "4.1": {
         "reference_genome": "GRCh38",
-        "data_types": ["exomes", "genomes", "joint"],
+        "data_types": ["joint"],
         "dataset_versions": {
             "vep": "105",
             "gencode": "v39",
@@ -46,6 +46,19 @@ VARIANT_DATA = {
             "constraint": "4.1",
             "pext": "v10",
             "browser": "4.1",
+        },
+    },
+    "4.1.1": {
+        "reference_genome": "GRCh38",
+        "data_types": ["exomes", "genomes"],
+        "dataset_versions": {
+            "vep": {"default": "105", "latest": "115"},
+            "gencode": {"default": "v39", "latest": "v49"},
+            "coverage": {"exomes": "4.0", "genomes": "3.0.1"},
+            "all_sites_an": "4.1",
+            "constraint": "4.1.1",
+            "pext": "v10",
+            "browser": "4.1.1",
         },
     },
 }
@@ -76,6 +89,12 @@ CONSTRAINT_DATA = {
         "exome_coverage_cutoff": 30,
         "af_cutoff": 0.001,
     },
+    "4.1.1": {
+        "reference_genome": "GRCh38",
+        "exome_coverage_field": "AN_percent",
+        "exome_coverage_cutoff": 90,
+        "af_cutoff": 0.001,
+    },
 }
 LIFTOVER_DATA = {
     "2.1.1": {
@@ -87,7 +106,10 @@ PEXT_DATA = {
     "v7": {"reference_genome": "GRCh37", "data_types": PEXT_DATA_TYPES},
     "v10": {"reference_genome": "GRCh38", "data_types": PEXT_DATA_TYPES},
 }
-BROWSER_DATA = {"4.1": {"reference_genome": "GRCh38"}}
+BROWSER_DATA = {
+    "4.1": {"reference_genome": "GRCh38"},
+    "4.1.1": {"reference_genome": "GRCh38"},
+}
 SUPPORTED_DATASETS = {
     "variant": {"resource": "public_release", "versions": VARIANT_DATA},
     "coverage": {"resource": "coverage", "versions": COVERAGE_DATA},
@@ -103,6 +125,7 @@ SUPPORTED_REFERENCE_DATA = {
         "versions": {
             "85": {"reference_genome": "GRCh37"},
             "105": {"reference_genome": "GRCh38"},
+            "115": {"reference_genome": "GRCh38"},
         },
     },
     "gencode": {
@@ -110,6 +133,7 @@ SUPPORTED_REFERENCE_DATA = {
         "versions": {
             "v19": {"reference_genome": "GRCh37"},
             "v39": {"reference_genome": "GRCh38"},
+            "v49": {"reference_genome": "GRCh38"},
         },
     },
 }
@@ -128,7 +152,7 @@ class GnomADSession:
         :return: None.
         """
         self.data_type = "exomes"
-        self.version = "4.1"
+        self.version = "4.1.1"
         self.set_default_data()
 
     def set_default_data(
@@ -172,6 +196,7 @@ def _get_dataset(
     dataset: str = "variant",
     data_type: str = None,
     version: str = None,
+    use_latest: bool = False,
 ) -> hl.Table:
     """
     Get gnomAD HT using a Hail Table, specific parameters, or session defaults.
@@ -181,6 +206,10 @@ def _get_dataset(
         "gencode". Default is variant.
     :param data_type: Data type (exomes, genomes, or joint). Default is session value.
     :param version: gnomAD version. Default is session value.
+    :param use_latest: If True, use the latest version of the dataset when multiple
+        versions are available. Applies to VEP and GENCODE for versions starting at gnomAD
+        v4.1.1, where setting this to True returns VEP 115 (instead of 105) and GENCODE
+        v49 (instead of v39). Default is False (uses default version).
     :return: Hail Table for requested dataset, data type, and version.
     """
     # If a pre-loaded Hail Table is provided, return it directly.
@@ -203,7 +232,26 @@ def _get_dataset(
     if dataset == "variant":
         version = version or gnomad_session.version
     else:
-        version = version or gnomad_session.compatible_datasets[dataset]
+        compatible_version = gnomad_session.compatible_datasets.get(dataset)
+        # Handle datasets with default/latest versions.
+        has_latest = (
+            compatible_version is not None
+            and isinstance(compatible_version, dict)
+            and "default" in compatible_version
+        )
+        if use_latest:
+            if not has_latest:
+                raise ValueError(
+                    f"use_latest=True is not supported for {dataset} in gnomAD "
+                    f"{gnomad_session.version}. The use_latest option is only available "
+                    f"for datasets with multiple versions (e.g., VEP and GENCODE in "
+                    f"gnomAD v4.1.1 and later)."
+                )
+            version = version or compatible_version["latest"]
+        elif has_latest:
+            version = version or compatible_version["default"]
+        elif compatible_version is not None:
+            version = version or compatible_version
 
     # Validate version.
     versions = dataset_info["versions"]
@@ -248,6 +296,7 @@ def get_gnomad_release(
     dataset: str = "variant",
     data_type: Optional[str] = None,
     version: Optional[str] = None,
+    use_latest: bool = False,
 ) -> hl.Table:
     """
     Get gnomAD HT by dataset, data type, and version.
@@ -255,7 +304,7 @@ def get_gnomad_release(
     Not all combinations of dataset, data type, and version are available and/or
     supported by the toolbox. The table below shows what is supported.
 
-    .. table:: Available versions for each dataset and data type are (as of 2025-1-13)
+    .. table:: Available versions for each dataset and data type are (as of 2026-1-22)
         :widths: auto
 
         +--------------+--------------+---------+------------------------------+
@@ -267,20 +316,23 @@ def get_gnomad_release(
         |              +--------------+---------+------------------------------+
         |              | constraint   | 2.1.1   | N/A                          |
         |              +--------------+---------+------------------------------+
-        |              + pext         | v7      | base_level, annotation_level |
+        |              | pext         | v7      | base_level, annotation_level |
         |              +--------------+---------+------------------------------+
         |              | liftover     | 2.1.1   | exomes, genomes              |
         +--------------+--------------+---------+------------------------------+
-        | GRCh38       | variant      | 4.1     | exomes, genomes, joint       |
+        | GRCh38       | variant      | 4.1     | joint                        |
+        |              +--------------+---------+------------------------------+
+        |              | variant      | 4.1.1   | exomes, genomes              |
         |              +--------------+---------+------------------------------+
         |              | all_sites_an | 4.1     | exomes, genomes              |
         |              +--------------+---------+------------------------------+
-        |              | browser      | 4.1     | N/A (joint, but doesn't need |
-        |              |              |         | to be specified)             |
+        |              | browser      | 4.1.1   | N/A                          |
         |              +--------------+---------+------------------------------+
         |              | coverage     | 3.0.1   | genomes                      |
         |              +--------------+---------+------------------------------+
-        |              | constraint   | 4.1     | N/A                          |
+        |              | coverage     | 4.0     | exomes                       |
+        |              +--------------+---------+------------------------------+
+        |              | constraint   | 4.1.1   | N/A                          |
         |              +--------------+---------+------------------------------+
         |              | pext         | v10     | base_level, annotation_level |
         +--------------+--------------+---------+------------------------------+
@@ -291,13 +343,22 @@ def get_gnomad_release(
         except "pext" where it is one of "base_level", "annotation_level". Default is
         the current session data type.
     :param version: gnomAD dataset version. Default is the current session version.
+    :param use_latest: If True, use the latest version of a reference dataset when
+        multiple versions are available. Supported for VEP and GENCODE in gnomAD
+        v4.1.1 and later, where setting this to True returns VEP 115 (instead of 105)
+        and GENCODE v49 (instead of v39). Default is False (uses default version).
     :return: Hail Table for requested dataset, data type, and version.
     """
-    return _get_dataset(dataset=dataset, data_type=data_type, version=version)
+    return _get_dataset(
+        dataset=dataset, data_type=data_type, version=version, use_latest=use_latest
+    )
 
 
 def get_compatible_dataset_versions(
-    dataset: str, variant_version: Optional[str] = None, data_type: Optional[str] = None
+    dataset: str,
+    variant_version: Optional[str] = None,
+    data_type: Optional[str] = None,
+    use_latest: bool = False,
 ) -> Union[str, dict]:
     """
     Get the compatible version of another datasets for a given gnomAD variant data version.
@@ -306,14 +367,22 @@ def get_compatible_dataset_versions(
     :param variant_version: Optional gnomAD variant data version. If not provided, the
         current session version is used.
     :param data_type: Optional data type for the dataset if applicable.
+    :param use_latest: If True and the dataset has default/latest versions, return the
+        latest version. Supported for VEP and GENCODE in gnomAD v4.1.1 and later,
+        where setting this to True returns VEP 115 (instead of 105) and GENCODE v49
+        (instead of v39). Default is False (returns default version).
     :return: Compatible version of the dataset for the given variant version.
     """
     # Get the dictionary of compatible versions for the given variant version or
     # the current session version.
-    if variant_version is None:
-        versions = gnomad_session.compatible_datasets
-    else:
+    variant_version = variant_version or gnomad_session.version
+    if variant_version in VARIANT_DATA:
         versions = VARIANT_DATA[variant_version]["dataset_versions"]
+    else:
+        raise ValueError(
+            f"Version {variant_version} is not a supported gnomAD version in the "
+            f"Toolbox. Supported versions: {list(VARIANT_DATA.keys())}"
+        )
 
     # Validate dataset.
     if dataset not in versions:
@@ -322,13 +391,29 @@ def get_compatible_dataset_versions(
             f"Available datasets: {list(versions.keys())}"
         )
 
+    dataset_version = versions[dataset]
+
+    # Handle datasets with default/latest versions.
+    has_latest = isinstance(dataset_version, dict) and "default" in dataset_version
+    if use_latest:
+        if not has_latest:
+            raise ValueError(
+                f"use_latest=True is not supported for {dataset} in gnomAD "
+                f"{variant_version}. The use_latest option is only available for "
+                f"datasets with multiple versions (e.g., VEP and GENCODE in gnomAD "
+                f"v4.1.1 and later)."
+            )
+        return dataset_version["latest"]
+
+    if has_latest:
+        return dataset_version["default"]
+
     # If the dataset has multiple data types and a data type is provided, return the
     # version for the data type.
-    dataset_version = versions[dataset]
     if data_type and isinstance(dataset_version, dict):
         if data_type not in dataset_version:
             raise ValueError(
-                f"{data_type} is not available for {variant_version} {dataset}."
+                f"{data_type} is not available for {variant_version} {dataset}. "
                 f"Available data types: {list(dataset_version.keys())}"
             )
         return dataset_version[data_type]

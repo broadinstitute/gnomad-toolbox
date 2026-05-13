@@ -30,6 +30,10 @@ def get_observed_plofs_for_gene_constraint(
         - High-confidence LOFTEE in the MANE Select or Canonical transcript
         - ≥ a specified coverage threshold (depends on the version)
 
+    .. note::
+        This function uses the default GENCODE version for versions starting with gnomAD v4.1.1,
+        as constraint metrics were only calculated using the default GENCODE version.
+
     :param gene_symbol: Gene symbol.
     :param version: Optional gnomAD dataset version. If not provided, uses the gnomAD
         session version.
@@ -65,6 +69,7 @@ def get_observed_plofs_for_gene_constraint(
     )
 
     # Get gene intervals and filter tables.
+    # Always use the default GENCODE version for constraint analysis.
     gencode_version = get_compatible_dataset_versions("gencode", version)
     intervals = get_gene_intervals(gene_symbol, gencode_version=gencode_version)
     variant_ht = hl.filter_intervals(variant_ht, intervals)
