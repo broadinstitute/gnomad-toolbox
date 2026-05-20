@@ -29,6 +29,7 @@ jobs:
           pip install wheel
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
+          curl -sSL https://broad.io/install-gcs-connector | python3 - --auth-type UNAUTHENTICATED
       - name: Check formatting
         run: black --check gnomad_toolbox tests
       - name: Check imports
