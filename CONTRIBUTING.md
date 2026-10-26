@@ -2,6 +2,8 @@
 
 ## Setting up a development environment
 
+- Use Python 3.11 or newer. The development toolchain in `requirements-dev.txt` requires it (filelock 4.x and platformdirs 4.13+ are 3.11-only), even though the package itself supports older versions. CI runs 3.11.
+
 - Install development dependencies.
 
   ```
