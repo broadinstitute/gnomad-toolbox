@@ -1,0 +1,14 @@
+gnomad_toolbox.scripts
+======================
+
+Script to copy Jupyter notebooks and configurations to a user-specified directory.
+
+
+
+Module Functions
+****************
+
+.. automodulesummary:: gnomad_toolbox.scripts
+
+.. automodule:: gnomad_toolbox.scripts
+    :exclude-members: get_script_argument_parser

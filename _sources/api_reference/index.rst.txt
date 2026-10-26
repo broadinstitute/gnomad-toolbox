@@ -1,0 +1,13 @@
+gnomad_toolbox
+==============
+
+This repository provides a set of Python functions to simplify working with gnomAD Hail Tables. It includes tools for data access, filtering, and analysis.
+
+.. toctree::
+    :maxdepth: 2
+
+    analysis <analysis/index>
+    filtering <filtering/index>
+    load_data <load_data>
+    load_reference_data <load_reference_data>
+    scripts <scripts>

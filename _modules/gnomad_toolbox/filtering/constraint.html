@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gnomad_toolbox.filtering.constraint &mdash; gnomad_toolbox main documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/theme_overrides.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            gnomad_toolbox
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/broadinstitute/gnomad-toolbox/tags">Change Log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">gnomad_toolbox</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gnomad_toolbox.filtering.constraint</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gnomad_toolbox.filtering.constraint</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Functions to filter gnomAD sites HT by constraint metrics.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">hail</span> <span class="k">as</span> <span class="nn">hl</span>
+
+<span class="kn">from</span> <span class="nn">gnomad_toolbox.filtering.vep</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">filter_to_high_confidence_loftee</span><span class="p">,</span>
+    <span class="n">get_gene_intervals</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">gnomad_toolbox.load_data</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CONSTRAINT_DATA</span><span class="p">,</span>
+    <span class="n">_get_dataset</span><span class="p">,</span>
+    <span class="n">get_compatible_dataset_versions</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_observed_plofs_for_gene_constraint"><a class="viewcode-back" href="../../../api_reference/filtering/constraint.html#gnomad_toolbox.filtering.constraint.get_observed_plofs_for_gene_constraint">[docs]</a><span class="k">def</span> <span class="nf">get_observed_plofs_for_gene_constraint</span><span class="p">(</span>
+    <span class="n">gene_symbol</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">variant_ht</span><span class="p">:</span> <span class="n">hl</span><span class="o">.</span><span class="n">Table</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">coverage_ht</span><span class="p">:</span> <span class="n">hl</span><span class="o">.</span><span class="n">Table</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">hl</span><span class="o">.</span><span class="n">Table</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Filter to observed pLoF variants used for gene constraint metrics.</span>
+
+<span class="sd">    The pLOF variant count displayed on the browser meets the following requirements:</span>
+
+<span class="sd">        - PASS variant QC</span>
+<span class="sd">        - SNV</span>
+<span class="sd">        - Allele frequency ≤ 0.1%</span>
+<span class="sd">        - High-confidence LOFTEE in the MANE Select or Canonical transcript</span>
+<span class="sd">        - ≥ a specified coverage threshold (depends on the version)</span>
+
+<span class="sd">    :param gene_symbol: Gene symbol.</span>
+<span class="sd">    :param version: Optional gnomAD dataset version. If not provided, uses the gnomAD</span>
+<span class="sd">        session version.</span>
+<span class="sd">    :param variant_ht: Optional Hail Table with variants. If not provided, uses the</span>
+<span class="sd">        exome variant Table for the gnomAD session version.</span>
+<span class="sd">    :param coverage_ht: Optional Hail Table with coverage data. If not provided, uses</span>
+<span class="sd">        the exome coverage Table for the gnomAD session version.</span>
+<span class="sd">    :return: Table with pLoF variants.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">variant_ht</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">coverage_ht</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Variant Hail Table provided without coverage Hail Table.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">coverage_ht</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">variant_ht</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Coverage Hail Table provided without variant Hail Table.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Load the variant exomes Hail Table if not provided.</span>
+    <span class="n">variant_ht</span> <span class="o">=</span> <span class="n">_get_dataset</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;variant&quot;</span><span class="p">,</span>
+        <span class="n">ht</span><span class="o">=</span><span class="n">variant_ht</span><span class="p">,</span>
+        <span class="n">data_type</span><span class="o">=</span><span class="s2">&quot;exomes&quot;</span><span class="p">,</span>
+        <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Determine the coverage version compatible with the variant version.</span>
+    <span class="n">coverage_version</span> <span class="o">=</span> <span class="n">get_compatible_dataset_versions</span><span class="p">(</span><span class="s2">&quot;coverage&quot;</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="s2">&quot;exomes&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Load the coverage Hail Table if not provided.</span>
+    <span class="n">coverage_ht</span> <span class="o">=</span> <span class="n">_get_dataset</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;coverage&quot;</span><span class="p">,</span>
+        <span class="n">ht</span><span class="o">=</span><span class="n">coverage_ht</span><span class="p">,</span>
+        <span class="n">data_type</span><span class="o">=</span><span class="s2">&quot;exomes&quot;</span><span class="p">,</span>
+        <span class="n">version</span><span class="o">=</span><span class="n">coverage_version</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Get gene intervals and filter tables.</span>
+    <span class="n">gencode_version</span> <span class="o">=</span> <span class="n">get_compatible_dataset_versions</span><span class="p">(</span><span class="s2">&quot;gencode&quot;</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">get_gene_intervals</span><span class="p">(</span><span class="n">gene_symbol</span><span class="p">,</span> <span class="n">gencode_version</span><span class="o">=</span><span class="n">gencode_version</span><span class="p">)</span>
+    <span class="n">variant_ht</span> <span class="o">=</span> <span class="n">hl</span><span class="o">.</span><span class="n">filter_intervals</span><span class="p">(</span><span class="n">variant_ht</span><span class="p">,</span> <span class="n">intervals</span><span class="p">)</span>
+    <span class="n">coverage_ht</span> <span class="o">=</span> <span class="n">hl</span><span class="o">.</span><span class="n">filter_intervals</span><span class="p">(</span><span class="n">coverage_ht</span><span class="p">,</span> <span class="n">intervals</span><span class="p">)</span>
+
+    <span class="c1"># Determine constraint filters.</span>
+    <span class="n">constraint_version</span> <span class="o">=</span> <span class="n">get_compatible_dataset_versions</span><span class="p">(</span><span class="s2">&quot;constraint&quot;</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+    <span class="n">constraint_info</span> <span class="o">=</span> <span class="n">CONSTRAINT_DATA</span><span class="p">[</span><span class="n">constraint_version</span><span class="p">]</span>
+    <span class="n">cov_field</span> <span class="o">=</span> <span class="n">constraint_info</span><span class="p">[</span><span class="s2">&quot;exome_coverage_field&quot;</span><span class="p">]</span>
+    <span class="n">cov_cutoff</span> <span class="o">=</span> <span class="n">constraint_info</span><span class="p">[</span><span class="s2">&quot;exome_coverage_cutoff&quot;</span><span class="p">]</span>
+    <span class="n">af_cutoff</span> <span class="o">=</span> <span class="n">constraint_info</span><span class="p">[</span><span class="s2">&quot;af_cutoff&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Annotate the exome coverage.</span>
+    <span class="n">variant_ht</span> <span class="o">=</span> <span class="n">variant_ht</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+        <span class="n">exome_coverage</span><span class="o">=</span><span class="n">coverage_ht</span><span class="p">[</span><span class="n">variant_ht</span><span class="o">.</span><span class="n">locus</span><span class="p">][</span><span class="n">cov_field</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Apply constraint filters.</span>
+    <span class="n">variant_ht</span> <span class="o">=</span> <span class="n">variant_ht</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">hl</span><span class="o">.</span><span class="n">len</span><span class="p">(</span><span class="n">variant_ht</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="o">&amp;</span> <span class="p">(</span><span class="n">hl</span><span class="o">.</span><span class="n">is_snp</span><span class="p">(</span><span class="n">variant_ht</span><span class="o">.</span><span class="n">alleles</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">variant_ht</span><span class="o">.</span><span class="n">alleles</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="o">&amp;</span> <span class="p">(</span><span class="n">variant_ht</span><span class="o">.</span><span class="n">freq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">AF</span> <span class="o">&lt;=</span> <span class="n">af_cutoff</span><span class="p">)</span>
+        <span class="o">&amp;</span> <span class="p">(</span><span class="n">variant_ht</span><span class="o">.</span><span class="n">exome_coverage</span> <span class="o">&gt;=</span> <span class="n">cov_cutoff</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Filter to high-confidence LOFTEE variants.</span>
+    <span class="n">variant_ht</span> <span class="o">=</span> <span class="n">filter_to_high_confidence_loftee</span><span class="p">(</span>
+        <span class="n">gene_symbol</span><span class="o">=</span><span class="n">gene_symbol</span><span class="p">,</span>
+        <span class="n">ht</span><span class="o">=</span><span class="n">variant_ht</span><span class="p">,</span>
+        <span class="n">canonical_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">variant_ht</span></div>
+
+
+<span class="c1"># noqa: D104, D100</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,14 @@
+gnomad_toolbox.load_reference_data
+==================================
+
+Functions to import non-gnomAD reference data.
+
+
+
+Module Functions
+****************
+
+.. automodulesummary:: gnomad_toolbox.load_reference_data
+
+.. automodule:: gnomad_toolbox.load_reference_data
+    :exclude-members: get_script_argument_parser
