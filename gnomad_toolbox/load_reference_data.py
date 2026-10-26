@@ -8,8 +8,12 @@ from gnomad.resources.resource_utils import (
 )
 
 CLINVAR_FTP_URL = {
-    "GRCh37": "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/weekly/clinvar.vcf.gz",
-    "GRCh38": "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/weekly/clinvar.vcf.gz",
+    "GRCh37": (
+        "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/weekly/clinvar.vcf.gz"
+    ),
+    "GRCh38": (
+        "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/weekly/clinvar.vcf.gz"
+    ),
 }
 """
 Path to the latest weekly ClinVar VCF release for GRCh37 and GRCh38.
